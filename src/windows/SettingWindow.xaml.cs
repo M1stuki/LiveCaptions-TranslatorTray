@@ -7,6 +7,7 @@ using Wpf.Ui.Controls;
 
 using LiveCaptionsTranslator.apis;
 using LiveCaptionsTranslator.models;
+using LiveCaptionsTranslator.Utils;
 using Button = Wpf.Ui.Controls.Button;
 using TextBlock = Wpf.Ui.Controls.TextBlock;
 using ComboBox = System.Windows.Controls.ComboBox;
@@ -23,12 +24,14 @@ namespace LiveCaptionsTranslator
             InitializeComponent();
             ApplicationThemeManager.ApplySystemTheme();
             DataContext = Translator.Setting;
+            ChineseUiLocalizer.Apply(this);
 
             Loaded += (sender, args) =>
             {
                 SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, true);
                 Initialize();
                 SelectButton(PromptButton);
+                ChineseUiLocalizer.Apply(this);
             };
         }
 
@@ -154,7 +157,7 @@ namespace LiveCaptionsTranslator
 
                 if (string.IsNullOrWhiteSpace(baseUrl))
                 {
-                    System.Windows.MessageBox.Show("Please set the API URL first.", "Load Models", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show("请先设置 API 地址。", "加载模型", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
@@ -167,9 +170,9 @@ namespace LiveCaptionsTranslator
                     {
                         comboBox.ItemsSource = models;
                         if (models.Count > 0)
-                            System.Windows.MessageBox.Show($"Loaded {models.Count} model(s).", "Load Models", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                            System.Windows.MessageBox.Show($"已加载 {models.Count} 个模型。", "加载模型", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                         else
-                            System.Windows.MessageBox.Show("No models found or unable to connect. Check that the server is running.", "Load Models", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                            System.Windows.MessageBox.Show("未找到模型或无法连接，请确认服务器正在运行。", "加载模型", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                     }
                 }
                 finally
