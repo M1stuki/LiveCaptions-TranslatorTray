@@ -1,27 +1,25 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using Forms = System.Windows.Forms;
+using Drawing = System.Drawing;
+using Drawing2D = System.Drawing.Drawing2D;
+using Media = System.Windows.Media;
+using Imaging = System.Windows.Media.Imaging;
 
 using LiveCaptionsTranslator.utils;
 using LiveCaptionsTranslator.Utils;
+using Wpf.Ui.Controls;
+using Wpf.Ui.Extensions;
 
 namespace LiveCaptionsTranslator
 {
     public partial class App : System.Windows.Application
     {
-        private const string TrayEnabledPngBase64 =
-            "iVBORw0KGgoAAAANSUhEUgAAACUAAAAjCAIAAACcpVRJAAACrklEQVR4AeyTX0xScRTHE1m0bgpLH0wfTJ2yfMkt55ZSm9kDLVNxavWmRi+ktAhRYdbKJEHUBcZLpL5VYmpmE7ccW4EtZ5u92JCF+QD5AA3Im9H409nYfODCzx/D+QT77uz8vvd3usufeswNth9w5SNEOHewvydvfeSfnmZxnPBPYY1+83t+DQ0ONTY344t/kf15ejvUOKN72NiloE7yemrQ77Pha+7Ymuntn3mCIikTxFhYMNtv3qGVoMxQKaTRqt9tDvYbiOV1OagGm4/f7fb6/1MsoXsRtxmFG9eXqR719NVdqIN99ykxn8m/wHz7o5VRwUlNTd/2oCS6PxWSNj41Lu6UXKiu7Orv6+uThdoWFRfqJydaW1otVVUqF8trV62E/VsTlSSSd2dk5AypVxbkKwS2BZkQDHel0urSrGxLhbSHnPEfcITYY5uGIEBaPOEqwi4pWv65Oz0zBLkCyufkDmmZlnWCz2TNvple+rASDwaVPS65fLvARwuKlpKTQaDSnM3J98vPyoDVJkhAxhcWDb4LXz8zMjGhq29gAhyAIiJjC4pF/SMv6esnpEl5dPXwrJLm5JwGwtfXTYrHU1fJKz5TCAMrPlmcczwAfISwe1CuVCofD3iEWmz+atU+17W3tYMKfTN4vh0T9RG36YFINqLjcS3BECJfn9ribW5rlj+VGo7Ff0S+TScNNrVZrY1PD6Njo+8VFSafk5asXYT9WxOVBve+fb+7dnKxHNvt2FnJwwvJ4Pbrnunv3e0xmUyAQCJuxIooX1yJEAOh0OoNxJMKEI4rHq+UV5BfApXgFOyVsF7JYTGohikccI7Qj2ob6hpzsHHwVnyoeHhzmcrlUGDgoHjxOS08TiUT6CT2+dM90ZWVlUBtVe/Ci1iRiJnmJTI9am5wndSaJOP8BAAD//1xa62sAAAAGSURBVAMAtkKaJT3PlVEAAAAASUVORK5CYII=";
-
-        private const string TrayDisabledPngBase64 =
-            "iVBORw0KGgoAAAANSUhEUgAAADcAAAAcCAIAAABK0rDkAAAC6UlEQVR4AeyWX0xSURjAgaBMwtzC4XLL0YNvvthyDiShB19LJ7y6yuZ6cUjGH7E/orVyzIaXcLqZYlItXqqX0BwPxQu00ZBHntKA+afNEuXPEPrs6h0Yf8+9s9y8++Ce833f+c5v3/nOPYcR3gz//8KgHYbniJK6VTrK5T/PpdVq7bnTEwptUkeSKxLiivMqK50up1qjOhhQRMpLIpG2t8/91Y2Drq//VKqUUpk0t3Tc7HC6XLmSlsWGSAkpnLHM0Ol0z4IHQJlMZq9Gy+Pxssyyqw4EAorb3R9stt1+wS9Eyvn5j4uL30YMmK5/gAA1YkbrG2sOeff2vVAgxLARyH3BhDuOiJTLK8vcM9wLdXUSsZgAhQTvhMz+Y7GYEsnleDwejUaye2WwIFKmRgLQe3fvEzWaagLu2bk5zGj0er3b24lUU1FtCigBxTxthln3gfr9fqmsrV/34NXrl523Om2zRZcjxMSFAsqJ5xPfl5aePB56OPgIr1HghsxhRgy2l+WFxfHJMTY6BhWJT4nwT5YyEom6vriam5tFjY2w9ESNhsNhtUqj1fbx+XwGg1FbW1tefhqBDx9ClhKiJBKJiooKaICkgsLnSSgQgJK8UEAJqQoGgwRKKmgoRM0RSpaypORE/cV6u93+2eFIJpM+n29ldZVyULKUkMKO6zf45/kqtVIoErZfa5+anATlH1AdsZlAQ0YooGSfYo+Pjg/rh2VtMv2QvlvejQNJxBJiM5FcegoogYl1nNXQ0CCXywUCAbRpe4+kmJNpb1CGNyIlm81e+7HmdrszhExX7QMVNYpqamo4nLJ0rzw9RMqWKy3V56q75F3SfLc1cDCZnjGPMfGTiU6jGZ4aSktP5uFKNyNSQi2ajKbWq63p0bL2uFxu1dkqz4JHpVFFIsVdNSAoIiWM5JRxFApFjnva3yZ8MwHo1lYYIhQu6JSFz0F4Qo0O6AZ/bWzEYjFCWUjjQCkBSNzUND1lLvZM/w0AAP//rVQmRQAAAAZJREFUAwDXZigcCOevOQAAAABJRU5ErkJggg==";
-
         private Forms.NotifyIcon? _trayIcon;
-        private Icon? _trayEnabledIcon;
-        private Icon? _trayDisabledIcon;
+        private Drawing.Icon? _trayEnabledIcon;
+        private Drawing.Icon? _trayDisabledIcon;
         private Forms.ContextMenuStrip? _trayMenu;
         private Forms.ToolStripMenuItem? _enableMenuItem;
         private MainWindow? _mainWindow;
@@ -41,6 +39,7 @@ namespace LiveCaptionsTranslator
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
             EventManager.RegisterClassHandler(
                 typeof(FrameworkElement),
                 FrameworkElement.LoadedEvent,
@@ -49,7 +48,8 @@ namespace LiveCaptionsTranslator
             _mainWindow = new MainWindow();
             MainWindow = _mainWindow;
             _mainWindow.Closing += MainWindow_Closing;
-            InitializeTrayIcon();
+
+            InitializeTrayIconSafely();
         }
 
         private static void OnFrameworkElementLoaded(object sender, RoutedEventArgs e)
@@ -58,67 +58,136 @@ namespace LiveCaptionsTranslator
                 ChineseUiLocalizer.ApplyElement(element);
         }
 
-        private void InitializeTrayIcon()
+        private void InitializeTrayIconSafely()
         {
-            _trayEnabledIcon = CreateWhiteTrayIcon(TrayEnabledPngBase64);
-            _trayDisabledIcon = CreateWhiteTrayIcon(TrayDisabledPngBase64);
-            _trayMenu = BuildTrayMenu();
-
-            _trayIcon = new Forms.NotifyIcon
-            {
-                Visible = true,
-                Icon = _trayDisabledIcon,
-                Text = "字幕已关闭，点击开启字幕",
-                ContextMenuStrip = _trayMenu
-            };
-
-            _trayIcon.MouseClick += (_, args) =>
-            {
-                if (args.Button == Forms.MouseButtons.Left)
-                    ToggleTranslation();
-            };
-        }
-
-        private static Icon CreateWhiteTrayIcon(string pngBase64)
-        {
-            using var stream = new MemoryStream(Convert.FromBase64String(pngBase64));
-            using var source = new Bitmap(stream);
-            using var mask = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
-
-            for (int y = 0; y < source.Height; y++)
-            {
-                for (int x = 0; x < source.Width; x++)
-                {
-                    var pixel = source.GetPixel(x, y);
-                    int luminance = (pixel.R * 299 + pixel.G * 587 + pixel.B * 114) / 1000;
-                    int alpha = luminance >= 246 ? 0 : Math.Min(255, (246 - luminance) * 2);
-                    mask.SetPixel(x, y, System.Drawing.Color.FromArgb(alpha, 255, 255, 255));
-                }
-            }
-
-            using var canvas = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
-            using (var graphics = Graphics.FromImage(canvas))
-            {
-                graphics.Clear(System.Drawing.Color.Transparent);
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-                const int maxWidth = 28;
-                const int maxHeight = 26;
-                double scale = Math.Min((double)maxWidth / mask.Width, (double)maxHeight / mask.Height);
-                int width = Math.Max(1, (int)Math.Round(mask.Width * scale));
-                int height = Math.Max(1, (int)Math.Round(mask.Height * scale));
-                int left = (32 - width) / 2;
-                int top = (32 - height) / 2;
-                graphics.DrawImage(mask, new Rectangle(left, top, width, height));
-            }
-
-            var handle = canvas.GetHicon();
             try
             {
-                using var temporary = Icon.FromHandle(handle);
-                return (Icon)temporary.Clone();
+                // Use the original Fluent System Icons already bundled by WPF-UI.
+                // White foreground is deliberate: these are the dark-mode tray variants.
+                _trayEnabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaption24);
+                _trayDisabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaptionOff24);
+            }
+            catch
+            {
+                // Never let icon rendering kill the tray process. The fallback still uses
+                // a white caption glyph style rather than the EXE application icon.
+                _trayEnabledIcon = CreateFallbackCaptionIcon(false);
+                _trayDisabledIcon = CreateFallbackCaptionIcon(true);
+            }
+
+            try
+            {
+                _trayMenu = BuildTrayMenu();
+                _trayIcon = new Forms.NotifyIcon
+                {
+                    Visible = true,
+                    Icon = _trayDisabledIcon,
+                    Text = "字幕已关闭，点击开启字幕",
+                    ContextMenuStrip = _trayMenu
+                };
+
+                _trayIcon.MouseClick += (_, args) =>
+                {
+                    if (args.Button == Forms.MouseButtons.Left)
+                        ToggleTranslation();
+                };
+            }
+            catch
+            {
+                // Final safety net: if NotifyIcon construction itself ever fails,
+                // keep the main program alive and surface the settings window.
+                _mainWindow?.Show();
+                _mainWindow?.Activate();
+            }
+        }
+
+        private static Drawing.Icon CreateFluentTrayIcon(SymbolRegular symbol)
+        {
+            const int size = 32;
+
+            var fontFamily = Current.TryFindResource("FluentSystemIcons") as Media.FontFamily;
+            if (fontFamily == null)
+                throw new InvalidOperationException("FluentSystemIcons font resource was not found.");
+
+            var glyph = new TextBlock
+            {
+                Width = size,
+                Height = size,
+                Text = symbol.GetString(),
+                FontFamily = fontFamily,
+                FontSize = 25,
+                Foreground = Media.Brushes.White,
+                Background = Media.Brushes.Transparent,
+                TextAlignment = TextAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                SnapsToDevicePixels = true
+            };
+
+            glyph.Measure(new System.Windows.Size(size, size));
+            glyph.Arrange(new Rect(0, 0, size, size));
+            glyph.UpdateLayout();
+
+            var render = new Imaging.RenderTargetBitmap(
+                size,
+                size,
+                96,
+                96,
+                Media.PixelFormats.Pbgra32);
+            render.Render(glyph);
+
+            var encoder = new Imaging.PngBitmapEncoder();
+            encoder.Frames.Add(Imaging.BitmapFrame.Create(render));
+
+            using var pngStream = new MemoryStream();
+            encoder.Save(pngStream);
+            pngStream.Position = 0;
+
+            using var bitmap = new Drawing.Bitmap(pngStream);
+            return IconFromBitmap(bitmap);
+        }
+
+        private static Drawing.Icon CreateFallbackCaptionIcon(bool off)
+        {
+            using var bitmap = new Drawing.Bitmap(32, 32, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var graphics = Drawing.Graphics.FromImage(bitmap))
+            {
+                graphics.Clear(Drawing.Color.Transparent);
+                graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+
+                using var pen = new Drawing.Pen(Drawing.Color.White, 2.2f)
+                {
+                    StartCap = Drawing2D.LineCap.Round,
+                    EndCap = Drawing2D.LineCap.Round,
+                    LineJoin = Drawing2D.LineJoin.Round
+                };
+
+                var box = new Drawing.RectangleF(4.5f, 7.5f, 23f, 17f);
+                graphics.DrawRoundedRectangle(pen, box, 4f);
+
+                using var font = new Drawing.Font("Segoe UI", 8.7f, Drawing.FontStyle.Bold, Drawing.GraphicsUnit.Pixel);
+                using var brush = new Drawing.SolidBrush(Drawing.Color.White);
+                var format = new Drawing.StringFormat
+                {
+                    Alignment = Drawing.StringAlignment.Center,
+                    LineAlignment = Drawing.StringAlignment.Center
+                };
+                graphics.DrawString("CC", font, brush, new Drawing.RectangleF(5, 8, 22, 16), format);
+
+                if (off)
+                    graphics.DrawLine(pen, 7, 25, 25, 7);
+            }
+
+            return IconFromBitmap(bitmap);
+        }
+
+        private static Drawing.Icon IconFromBitmap(Drawing.Bitmap bitmap)
+        {
+            var handle = bitmap.GetHicon();
+            try
+            {
+                using var temporary = Drawing.Icon.FromHandle(handle);
+                return (Drawing.Icon)temporary.Clone();
             }
             finally
             {
@@ -130,9 +199,9 @@ namespace LiveCaptionsTranslator
         {
             var menu = new Forms.ContextMenuStrip
             {
-                BackColor = System.Drawing.Color.FromArgb(45, 45, 45),
-                ForeColor = System.Drawing.Color.White,
-                Font = new System.Drawing.Font("Microsoft YaHei UI", 10.5f, System.Drawing.FontStyle.Regular),
+                BackColor = Drawing.Color.FromArgb(45, 45, 45),
+                ForeColor = Drawing.Color.White,
+                Font = new Drawing.Font("Microsoft YaHei UI", 10.5f, Drawing.FontStyle.Regular),
                 ShowImageMargin = false,
                 ShowCheckMargin = true,
                 Padding = new Forms.Padding(5, 7, 5, 7),
@@ -157,6 +226,7 @@ namespace LiveCaptionsTranslator
                 if (_enableMenuItem != null)
                     _enableMenuItem.Checked = _translationEnabled;
             };
+
             menu.Opened += (_, _) => ApplyRoundedRegion(menu, 7);
             menu.SizeChanged += (_, _) => ApplyRoundedRegion(menu, 7);
             return menu;
@@ -167,9 +237,9 @@ namespace LiveCaptionsTranslator
             return new Forms.ToolStripMenuItem(text)
             {
                 AutoSize = false,
-                Size = new System.Drawing.Size(245, 38),
-                ForeColor = System.Drawing.Color.White,
-                BackColor = System.Drawing.Color.Transparent,
+                Size = new Drawing.Size(245, 38),
+                ForeColor = Drawing.Color.White,
+                BackColor = Drawing.Color.Transparent,
                 Padding = new Forms.Padding(9, 0, 12, 0),
                 CheckOnClick = false
             };
@@ -181,15 +251,15 @@ namespace LiveCaptionsTranslator
                 return;
 
             using var path = CreateRoundedRectanglePath(
-                new Rectangle(0, 0, control.Width, control.Height), radius);
+                new Drawing.Rectangle(0, 0, control.Width, control.Height), radius);
             control.Region?.Dispose();
-            control.Region = new Region(path);
+            control.Region = new Drawing.Region(path);
         }
 
-        private static GraphicsPath CreateRoundedRectanglePath(Rectangle bounds, int radius)
+        private static Drawing2D.GraphicsPath CreateRoundedRectanglePath(Drawing.Rectangle bounds, int radius)
         {
             int diameter = radius * 2;
-            var path = new GraphicsPath();
+            var path = new Drawing2D.GraphicsPath();
             path.AddArc(bounds.Left, bounds.Top, diameter, diameter, 180, 90);
             path.AddArc(bounds.Right - diameter - 1, bounds.Top, diameter, diameter, 270, 90);
             path.AddArc(bounds.Right - diameter - 1, bounds.Bottom - diameter - 1, diameter, diameter, 0, 90);
@@ -264,21 +334,21 @@ namespace LiveCaptionsTranslator
 
         private sealed class DarkTrayMenuColorTable : Forms.ProfessionalColorTable
         {
-            private static readonly System.Drawing.Color Background = System.Drawing.Color.FromArgb(45, 45, 45);
-            private static readonly System.Drawing.Color Hover = System.Drawing.Color.FromArgb(61, 61, 61);
-            private static readonly System.Drawing.Color Border = System.Drawing.Color.FromArgb(82, 82, 82);
+            private static readonly Drawing.Color Background = Drawing.Color.FromArgb(45, 45, 45);
+            private static readonly Drawing.Color Hover = Drawing.Color.FromArgb(61, 61, 61);
+            private static readonly Drawing.Color Border = Drawing.Color.FromArgb(82, 82, 82);
 
-            public override System.Drawing.Color ToolStripDropDownBackground => Background;
-            public override System.Drawing.Color ImageMarginGradientBegin => Background;
-            public override System.Drawing.Color ImageMarginGradientMiddle => Background;
-            public override System.Drawing.Color ImageMarginGradientEnd => Background;
-            public override System.Drawing.Color MenuItemSelected => Hover;
-            public override System.Drawing.Color MenuItemSelectedGradientBegin => Hover;
-            public override System.Drawing.Color MenuItemSelectedGradientEnd => Hover;
-            public override System.Drawing.Color MenuItemBorder => System.Drawing.Color.Transparent;
-            public override System.Drawing.Color MenuBorder => Border;
-            public override System.Drawing.Color SeparatorDark => Border;
-            public override System.Drawing.Color SeparatorLight => Border;
+            public override Drawing.Color ToolStripDropDownBackground => Background;
+            public override Drawing.Color ImageMarginGradientBegin => Background;
+            public override Drawing.Color ImageMarginGradientMiddle => Background;
+            public override Drawing.Color ImageMarginGradientEnd => Background;
+            public override Drawing.Color MenuItemSelected => Hover;
+            public override Drawing.Color MenuItemSelectedGradientBegin => Hover;
+            public override Drawing.Color MenuItemSelectedGradientEnd => Hover;
+            public override Drawing.Color MenuItemBorder => Drawing.Color.Transparent;
+            public override Drawing.Color MenuBorder => Border;
+            public override Drawing.Color SeparatorDark => Border;
+            public override Drawing.Color SeparatorLight => Border;
         }
 
         private sealed class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
@@ -290,20 +360,20 @@ namespace LiveCaptionsTranslator
 
             protected override void OnRenderItemText(Forms.ToolStripItemTextRenderEventArgs e)
             {
-                e.TextColor = System.Drawing.Color.White;
+                e.TextColor = Drawing.Color.White;
                 base.OnRenderItemText(e);
             }
 
             protected override void OnRenderMenuItemBackground(Forms.ToolStripItemRenderEventArgs e)
             {
                 var graphics = e.Graphics;
-                graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                var rect = new Rectangle(3, 1, Math.Max(1, e.Item.Width - 6), Math.Max(1, e.Item.Height - 2));
+                graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+                var rect = new Drawing.Rectangle(3, 1, Math.Max(1, e.Item.Width - 6), Math.Max(1, e.Item.Height - 2));
                 var fill = e.Item.Selected
-                    ? System.Drawing.Color.FromArgb(61, 61, 61)
-                    : System.Drawing.Color.FromArgb(45, 45, 45);
+                    ? Drawing.Color.FromArgb(61, 61, 61)
+                    : Drawing.Color.FromArgb(45, 45, 45);
 
-                using var brush = new SolidBrush(fill);
+                using var brush = new Drawing.SolidBrush(fill);
                 using var path = CreateRoundedRectanglePath(rect, 5);
                 graphics.FillPath(brush, path);
             }
@@ -314,30 +384,45 @@ namespace LiveCaptionsTranslator
                     return;
 
                 var graphics = e.Graphics;
-                graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using var pen = new Pen(System.Drawing.Color.White, 1.8f)
+                graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+                using var pen = new Drawing.Pen(Drawing.Color.White, 1.8f)
                 {
-                    StartCap = LineCap.Round,
-                    EndCap = LineCap.Round
+                    StartCap = Drawing2D.LineCap.Round,
+                    EndCap = Drawing2D.LineCap.Round
                 };
 
                 int x = e.ImageRectangle.Left + 3;
                 int y = e.ImageRectangle.Top + e.ImageRectangle.Height / 2;
-                graphics.DrawLines(pen, new System.Drawing.Point[]
+                graphics.DrawLines(pen, new Drawing.Point[]
                 {
-                    new System.Drawing.Point(x, y),
-                    new System.Drawing.Point(x + 4, y + 4),
-                    new System.Drawing.Point(x + 11, y - 4)
+                    new Drawing.Point(x, y),
+                    new Drawing.Point(x + 4, y + 4),
+                    new Drawing.Point(x + 11, y - 4)
                 });
             }
 
             protected override void OnRenderToolStripBorder(Forms.ToolStripRenderEventArgs e)
             {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                var rect = new Rectangle(0, 0, Math.Max(1, e.ToolStrip.Width - 1), Math.Max(1, e.ToolStrip.Height - 1));
-                using var pen = new Pen(System.Drawing.Color.FromArgb(82, 82, 82), 1f);
+                e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+                var rect = new Drawing.Rectangle(0, 0, Math.Max(1, e.ToolStrip.Width - 1), Math.Max(1, e.ToolStrip.Height - 1));
+                using var pen = new Drawing.Pen(Drawing.Color.FromArgb(82, 82, 82), 1f);
                 using var path = CreateRoundedRectanglePath(rect, 7);
                 e.Graphics.DrawPath(pen, path);
+            }
+        }
+
+        private static class DrawingExtensions
+        {
+            public static void DrawRoundedRectangle(this Drawing.Graphics graphics, Drawing.Pen pen, Drawing.RectangleF rect, float radius)
+            {
+                using var path = new Drawing2D.GraphicsPath();
+                float d = radius * 2;
+                path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+                path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+                path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+                path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+                path.CloseFigure();
+                graphics.DrawPath(pen, path);
             }
         }
 
