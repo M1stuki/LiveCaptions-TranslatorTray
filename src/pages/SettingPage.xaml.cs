@@ -6,6 +6,7 @@ using Wpf.Ui.Appearance;
 
 using LiveCaptionsTranslator.models;
 using LiveCaptionsTranslator.utils;
+using LiveCaptionsTranslator.Utils;
 using Wpf.Ui.Controls;
 
 namespace LiveCaptionsTranslator
@@ -19,11 +20,13 @@ namespace LiveCaptionsTranslator
             InitializeComponent();
             ApplicationThemeManager.ApplySystemTheme();
             DataContext = Translator.Setting;
+            ChineseUiLocalizer.Apply(this);
 
             Loaded += (s, e) =>
             {
                 (App.Current.MainWindow as MainWindow)?.AutoHeightAdjust(maxHeight: (int)App.Current.MainWindow.MinHeight);
                 CheckForFirstUse();
+                ChineseUiLocalizer.Apply(this);
             };
 
             TranslateAPIBox.ItemsSource = Translator.Setting?.Configs.Keys;
@@ -37,19 +40,16 @@ namespace LiveCaptionsTranslator
             if (Translator.Window == null)
                 return;
 
-            var button = sender as Wpf.Ui.Controls.Button;
-            var text = ButtonText.Text;
-
             bool isHide = Translator.Window.Current.BoundingRectangle == Rect.Empty;
             if (isHide)
             {
                 LiveCaptionsHandler.RestoreLiveCaptions(Translator.Window);
-                ButtonText.Text = "Hide";
+                ButtonText.Text = "隐藏";
             }
             else
             {
                 LiveCaptionsHandler.HideLiveCaptions(Translator.Window);
-                ButtonText.Text = "Show";
+                ButtonText.Text = "显示";
             }
         }
 
@@ -158,7 +158,7 @@ namespace LiveCaptionsTranslator
         private void CheckForFirstUse()
         {
             if (Translator.FirstUseFlag)
-                ButtonText.Text = "Hide";
+                ButtonText.Text = "隐藏";
         }
 
         public void LoadAPISetting()
@@ -167,7 +167,6 @@ namespace LiveCaptionsTranslator
             var languagesProp = configType.GetProperty(
                 "SupportedLanguages", BindingFlags.Public | BindingFlags.Static);
 
-            // Traverse base classes to find `SupportedLanguages`
             while (configType != null && languagesProp == null)
             {
                 configType = configType.BaseType;
@@ -183,7 +182,7 @@ namespace LiveCaptionsTranslator
 
             string targetLang = Translator.Setting.TargetLanguage;
             if (!supportedLanguages.ContainsKey(targetLang))
-                supportedLanguages[targetLang] = targetLang;    // add custom language to supported languages
+                supportedLanguages[targetLang] = targetLang;
             TargetLangBox.SelectedItem = targetLang;
         }
     }
