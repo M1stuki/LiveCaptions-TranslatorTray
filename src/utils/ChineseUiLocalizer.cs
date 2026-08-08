@@ -38,6 +38,7 @@ namespace LiveCaptionsTranslator.Utils
 
             ["Prompt"] = "提示词",
             ["Current Config: "] = "当前配置：",
+            ["Current Config:"] = "当前配置：",
             ["New"] = "新建",
             ["Delete"] = "删除",
             ["Model Name"] = "模型名称",
@@ -66,6 +67,12 @@ namespace LiveCaptionsTranslator.Utils
             ["Update"] = "更新",
             ["Ignore this version"] = "忽略此版本",
             ["New Version Available"] = "发现新版本",
+            ["About"] = "关于",
+            ["Version"] = "版本",
+            ["Author"] = "作者",
+            ["Source"] = "源代码",
+            ["Previous"] = "上一页",
+            ["Next"] = "下一页",
 
             ["Note 1:"] = "说明 1：",
             ["Note 2:"] = "说明 2：",
@@ -110,21 +117,36 @@ namespace LiveCaptionsTranslator.Utils
 
             if (element is TextBlock textBlock)
             {
-                if (!string.IsNullOrWhiteSpace(textBlock.Text))
-                    textBlock.Text = Translate(textBlock.Text);
-
-                foreach (Inline inline in textBlock.Inlines)
+                // TextBlocks containing Runs are localized per Run so formatting is preserved.
+                if (textBlock.Inlines.Count > 1 || (textBlock.Inlines.FirstInline is Run && textBlock.Text != textBlock.Inlines.FirstInline.ToString()))
                 {
-                    if (inline is Run run && !string.IsNullOrEmpty(run.Text))
-                        run.Text = Translate(run.Text);
+                    foreach (Inline inline in textBlock.Inlines)
+                    {
+                        if (inline is Run run && !string.IsNullOrEmpty(run.Text))
+                            run.Text = Translate(run.Text);
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(textBlock.Text))
+                {
+                    var translated = Translate(textBlock.Text);
+                    if (!ReferenceEquals(translated, textBlock.Text) && translated != textBlock.Text)
+                        textBlock.Text = translated;
                 }
             }
 
             if (element is ContentControl contentControl && contentControl.Content is string content)
-                contentControl.Content = Translate(content);
+            {
+                var translated = Translate(content);
+                if (translated != content)
+                    contentControl.Content = translated;
+            }
 
             if (element is HeaderedContentControl headered && headered.Header is string header)
-                headered.Header = Translate(header);
+            {
+                var translated = Translate(header);
+                if (translated != header)
+                    headered.Header = translated;
+            }
         }
 
         private static string Translate(string text)
