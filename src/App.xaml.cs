@@ -10,6 +10,7 @@ using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
 using TrayNotifyIcon = Wpf.Ui.Tray.Controls.NotifyIcon;
 using MenuItem = System.Windows.Controls.MenuItem;
+using WpfTextBlock = System.Windows.Controls.TextBlock;
 
 namespace LiveCaptionsTranslator
 {
@@ -100,7 +101,7 @@ namespace LiveCaptionsTranslator
 
             string glyphText = filled ? symbol.Swap().GetString() : symbol.GetString();
 
-            var glyph = new TextBlock
+            var glyph = new WpfTextBlock
             {
                 Width = size,
                 Height = size,
