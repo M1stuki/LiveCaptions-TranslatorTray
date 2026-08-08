@@ -8,7 +8,6 @@ using Media = System.Windows.Media;
 using Imaging = System.Windows.Media.Imaging;
 
 using LiveCaptionsTranslator.utils;
-using LiveCaptionsTranslator.Utils;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
 
@@ -39,22 +38,11 @@ namespace LiveCaptionsTranslator
         {
             base.OnStartup(e);
 
-            EventManager.RegisterClassHandler(
-                typeof(FrameworkElement),
-                FrameworkElement.LoadedEvent,
-                new RoutedEventHandler(OnFrameworkElementLoaded));
-
             _mainWindow = new MainWindow();
             MainWindow = _mainWindow;
             _mainWindow.Closing += MainWindow_Closing;
 
             InitializeTrayIconSafely();
-        }
-
-        private static void OnFrameworkElementLoaded(object sender, RoutedEventArgs e)
-        {
-            if (sender is FrameworkElement element)
-                ChineseUiLocalizer.ApplyElement(element);
         }
 
         private void InitializeTrayIconSafely()
