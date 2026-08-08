@@ -13,9 +13,6 @@ namespace LiveCaptionsTranslator
 {
     public partial class App : System.Windows.Application
     {
-        // These two masks are made from the two Live Captions icons supplied by the user.
-        // At runtime their light background is removed and the glyph is rendered white,
-        // matching the Windows dark-mode tray style.
         private const string TrayEnabledPngBase64 =
             "iVBORw0KGgoAAAANSUhEUgAAACUAAAAjCAIAAACcpVRJAAACrklEQVR4AeyTX0xScRTHE1m0bgpLH0wfTJ2yfMkt55ZSm9kDLVNxavWmRi+ktAhRYdbKJEHUBcZLpL5VYmpmE7ccW4EtZ5u92JCF+QD5AA3Im9H409nYfODCzx/D+QT77uz8vvd3usufeswNth9w5SNEOHewvydvfeSfnmZxnPBPYY1+83t+DQ0ONTY344t/kf15ejvUOKN72NiloE7yemrQ77Pha+7Ymuntn3mCIikTxFhYMNtv3qGVoMxQKaTRqt9tDvYbiOV1OagGm4/f7fb6/1MsoXsRtxmFG9eXqR719NVdqIN99ykxn8m/wHz7o5VRwUlNTd/2oCS6PxWSNj41Lu6UXKiu7Orv6+uThdoWFRfqJydaW1otVVUqF8trV62E/VsTlSSSd2dk5AypVxbkKwS2BZkQDHel0urSrGxLhbSHnPEfcITYY5uGIEBaPOEqwi4pWv65Oz0zBLkCyufkDmmZlnWCz2TNvple+rASDwaVPS65fLvARwuKlpKTQaDSnM3J98vPyoDVJkhAxhcWDb4LXz8zMjGhq29gAhyAIiJjC4pF/SMv6esnpEl5dPXwrJLm5JwGwtfXTYrHU1fJKz5TCAMrPlmcczwAfISwe1CuVCofD3iEWmz+atU+17W3tYMKfTN4vh0T9RG36YFINqLjcS3BECJfn9ribW5rlj+VGo7Ff0S+TScNNrVZrY1PD6Njo+8VFSafk5asXYT9WxOVBve+fb+7dnKxHNvt2FnJwwvJ4Pbrnunv3e0xmUyAQCJuxIooX1yJEAOh0OoNxJMKEI4rHq+UV5BfApXgFOyVsF7JYTGohikccI7Qj2ob6hpzsHHwVnyoeHhzmcrlUGDgoHjxOS08TiUT6CT2+dM90ZWVlUBtVe/Ci1iRiJnmJTI9am5wndSaJOP8BAAD//1xa62sAAAAGSURBVAMAtkKaJT3PlVEAAAAASUVORK5CYII=";
 
@@ -35,9 +32,7 @@ namespace LiveCaptionsTranslator
         {
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             Translator.Setting?.Save();
-
             Translator.LogOnlyFlag = true;
-
             Task.Run(() => Translator.SyncLoop());
             Task.Run(() => Translator.TranslateLoop());
             Task.Run(() => Translator.DisplayLoop());
@@ -46,7 +41,6 @@ namespace LiveCaptionsTranslator
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
             EventManager.RegisterClassHandler(
                 typeof(FrameworkElement),
                 FrameworkElement.LoadedEvent,
@@ -55,7 +49,6 @@ namespace LiveCaptionsTranslator
             _mainWindow = new MainWindow();
             MainWindow = _mainWindow;
             _mainWindow.Closing += MainWindow_Closing;
-
             InitializeTrayIcon();
         }
 
@@ -92,8 +85,6 @@ namespace LiveCaptionsTranslator
             using var source = new Bitmap(stream);
             using var mask = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
 
-            // The supplied images are screenshots with a white background. Convert their
-            // darker glyph pixels into a white alpha mask so they look correct on a dark taskbar.
             for (int y = 0; y < source.Height; y++)
             {
                 for (int x = 0; x < source.Width; x++)
@@ -141,7 +132,7 @@ namespace LiveCaptionsTranslator
             {
                 BackColor = System.Drawing.Color.FromArgb(45, 45, 45),
                 ForeColor = System.Drawing.Color.White,
-                Font = new Font("Microsoft YaHei UI", 10.5f, FontStyle.Regular),
+                Font = new System.Drawing.Font("Microsoft YaHei UI", 10.5f, System.Drawing.FontStyle.Regular),
                 ShowImageMargin = false,
                 ShowCheckMargin = true,
                 Padding = new Forms.Padding(5, 7, 5, 7),
@@ -166,7 +157,6 @@ namespace LiveCaptionsTranslator
                 if (_enableMenuItem != null)
                     _enableMenuItem.Checked = _translationEnabled;
             };
-
             menu.Opened += (_, _) => ApplyRoundedRegion(menu, 7);
             menu.SizeChanged += (_, _) => ApplyRoundedRegion(menu, 7);
             return menu;
@@ -335,9 +325,9 @@ namespace LiveCaptionsTranslator
                 int y = e.ImageRectangle.Top + e.ImageRectangle.Height / 2;
                 graphics.DrawLines(pen,
                 [
-                    new Point(x, y),
-                    new Point(x + 4, y + 4),
-                    new Point(x + 11, y - 4)
+                    new System.Drawing.Point(x, y),
+                    new System.Drawing.Point(x + 4, y + 4),
+                    new System.Drawing.Point(x + 11, y - 4)
                 ]);
             }
 
