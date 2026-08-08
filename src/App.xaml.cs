@@ -73,8 +73,7 @@ namespace LiveCaptionsTranslator
                 };
 
                 // Keep the reliable native shell icon/event path, but display a real WPF-UI
-                // ContextMenu instead of the old WinForms ContextMenuStrip. WPF ContextMenu
-                // handles outside-click dismissal and screen-edge placement by itself.
+                // ContextMenu instead of the old WinForms ContextMenuStrip.
                 _trayIcon.MouseUp += (_, args) =>
                 {
                     if (args.Button == Forms.MouseButtons.Left)
@@ -203,13 +202,14 @@ namespace LiveCaptionsTranslator
 
         private WpfContextMenu BuildTrayMenu()
         {
-            // Keep the modern WPF-UI Fluent template, but size it only slightly larger
-            // than the earlier compact native menu.
+            // Size target: only a small step above the earlier 10.5-DIP / 22-DIP popup,
+            // while keeping the WPF-UI rounded Fluent shell.
             var menu = new WpfContextMenu
             {
                 FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
-                FontSize = 12.0,
-                MinWidth = 140
+                FontSize = 11.0,
+                MinWidth = 128,
+                StaysOpen = false
             };
 
             ApplyDarkTrayMenuPalette(menu);
@@ -262,25 +262,31 @@ namespace LiveCaptionsTranslator
                 Header = text,
                 IsCheckable = false,
                 StaysOpenOnClick = false,
-                MinHeight = 30,
-                Margin = new Thickness(0)
+                Style = (Style)Current.FindResource("TrayContextMenuItemStyle")
             };
         }
 
         private void ShowTrayMenu()
         {
-            if (_trayMenu == null)
+            if (_trayMenu == null || _mainWindow == null)
                 return;
 
             UpdateTrayMenuState();
 
-            // MousePoint placement lets WPF keep the popup on the usable monitor area,
-            // including when the tray is on a screen edge.
+            // Use the WPF window HWND as the popup owner/foreground window. WPF context menus
+            // rely on this relationship for normal mouse capture, so clicking another window,
+            // the desktop, or the taskbar dismisses the menu just like a native tray menu.
+            var helper = new System.Windows.Interop.WindowInteropHelper(_mainWindow);
+            var ownerHandle = helper.EnsureHandle();
+            _ = NativeMethods.SetForegroundWindow(ownerHandle);
+
             _trayMenu.Placement = PlacementMode.MousePoint;
-            _trayMenu.PlacementTarget = null;
+            _trayMenu.PlacementTarget = _mainWindow;
             if (_trayMenu.IsOpen)
                 _trayMenu.IsOpen = false;
+
             _trayMenu.IsOpen = true;
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () => _trayMenu?.Focus());
         }
 
         private void UpdateTrayMenuState()
@@ -361,6 +367,10 @@ namespace LiveCaptionsTranslator
             [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
             [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
             public static extern bool DestroyIcon(IntPtr hIcon);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+            public static extern bool SetForegroundWindow(IntPtr hWnd);
         }
     }
 }
