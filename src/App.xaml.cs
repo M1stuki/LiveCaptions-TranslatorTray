@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using Forms = System.Windows.Forms;
 using Drawing = System.Drawing;
 using Drawing2D = System.Drawing.Drawing2D;
@@ -20,8 +21,9 @@ namespace LiveCaptionsTranslator
         private Forms.NotifyIcon? _trayIcon;
         private Drawing.Icon? _trayEnabledIcon;
         private Drawing.Icon? _trayDisabledIcon;
-        private Forms.ContextMenuStrip? _trayMenu;
-        private Forms.ToolStripMenuItem? _enableMenuItem;
+        private System.Windows.Controls.ContextMenu? _trayMenu;
+        private System.Windows.Controls.MenuItem? _enableMenuItem;
+        private SymbolIcon? _enableCheckIcon;
         private MainWindow? _mainWindow;
         private bool _translationEnabled;
         private bool _exiting;
@@ -62,8 +64,10 @@ namespace LiveCaptionsTranslator
         {
             try
             {
-                _trayEnabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaption24);
-                _trayDisabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaptionOff24);
+                // Use the FILLED Fluent System Icons from the same WPF-UI package as the app.
+                // They remain pure white for a dark taskbar, but are visibly heavier than Regular.
+                _trayEnabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaption24, filled: true);
+                _trayDisabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaptionOff24, filled: true);
             }
             catch
             {
@@ -78,14 +82,19 @@ namespace LiveCaptionsTranslator
                 {
                     Visible = true,
                     Icon = _trayDisabledIcon,
-                    Text = "字幕已关闭，点击开启字幕",
-                    ContextMenuStrip = _trayMenu
+                    Text = "字幕已关闭，点击开启字幕"
                 };
 
-                _trayIcon.MouseClick += (_, args) =>
+                _trayIcon.MouseUp += (_, args) =>
                 {
                     if (args.Button == Forms.MouseButtons.Left)
-                        ToggleTranslation();
+                    {
+                        Dispatcher.BeginInvoke(ToggleTranslation);
+                    }
+                    else if (args.Button == Forms.MouseButtons.Right)
+                    {
+                        Dispatcher.BeginInvoke(ShowTrayMenu);
+                    }
                 };
             }
             catch
@@ -95,23 +104,24 @@ namespace LiveCaptionsTranslator
             }
         }
 
-        private static Drawing.Icon CreateFluentTrayIcon(SymbolRegular symbol)
+        private static Drawing.Icon CreateFluentTrayIcon(SymbolRegular symbol, bool filled)
         {
-            // Keep a 32px shell icon, but make the Fluent glyph nearly fill the canvas.
-            // This produces a noticeably larger visual mark on high-DPI / 4K taskbars.
             const int size = 32;
 
-            var fontFamily = Current.TryFindResource("FluentSystemIcons") as Media.FontFamily;
+            string resourceKey = filled ? "FluentSystemIconsFilled" : "FluentSystemIcons";
+            var fontFamily = Current.TryFindResource(resourceKey) as Media.FontFamily;
             if (fontFamily == null)
-                throw new InvalidOperationException("FluentSystemIcons font resource was not found.");
+                throw new InvalidOperationException($"{resourceKey} font resource was not found.");
+
+            string glyphText = filled ? symbol.Swap().GetString() : symbol.GetString();
 
             var glyph = new System.Windows.Controls.TextBlock
             {
                 Width = size,
                 Height = size,
-                Text = symbol.GetString(),
+                Text = glyphText,
                 FontFamily = fontFamily,
-                FontSize = 31,
+                FontSize = 30,
                 Foreground = Media.Brushes.White,
                 Background = Media.Brushes.Transparent,
                 TextAlignment = TextAlignment.Center,
@@ -151,7 +161,7 @@ namespace LiveCaptionsTranslator
                 graphics.Clear(Drawing.Color.Transparent);
                 graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
 
-                using var pen = new Drawing.Pen(Drawing.Color.White, 2.6f)
+                using var pen = new Drawing.Pen(Drawing.Color.White, 3.0f)
                 {
                     StartCap = Drawing2D.LineCap.Round,
                     EndCap = Drawing2D.LineCap.Round,
@@ -201,77 +211,78 @@ namespace LiveCaptionsTranslator
             }
         }
 
-        private Forms.ContextMenuStrip BuildTrayMenu()
+        private System.Windows.Controls.ContextMenu BuildTrayMenu()
         {
-            var menu = new Forms.ContextMenuStrip
+            // WPF-UI's ControlsDictionary supplies the real Fluent ContextMenu/MenuItem
+            // templates: rounded corners, shadow, modern hover states and DPI-aware rendering.
+            var menu = new System.Windows.Controls.ContextMenu
             {
-                BackColor = Drawing.Color.FromArgb(45, 45, 45),
-                ForeColor = Drawing.Color.White,
-                Font = new Drawing.Font("Microsoft YaHei UI", 9.0f, Drawing.FontStyle.Regular),
-                ShowImageMargin = false,
-                ShowCheckMargin = true,
-                Padding = new Forms.Padding(5, 5, 5, 5),
-                Renderer = new DarkTrayMenuRenderer()
+                MinWidth = 185,
+                FontSize = 14,
+                FontFamily = new Media.FontFamily("Segoe UI Variable Text"),
+                Placement = PlacementMode.MousePoint,
+                StaysOpen = false
             };
 
-            _enableMenuItem = CreateTrayMenuItem("启用字幕");
+            _enableCheckIcon = new SymbolIcon(SymbolRegular.Checkmark20, 16)
+            {
+                Visibility = Visibility.Hidden
+            };
+
+            _enableMenuItem = new System.Windows.Controls.MenuItem
+            {
+                Header = "启用字幕",
+                Icon = _enableCheckIcon,
+                FontWeight = FontWeights.SemiBold
+            };
             _enableMenuItem.Click += (_, _) => ToggleTranslation();
 
-            var settingsItem = CreateTrayMenuItem("设置");
+            var settingsItem = new System.Windows.Controls.MenuItem
+            {
+                Header = "设置",
+                Icon = CreateEmptyMenuIcon()
+            };
             settingsItem.Click += (_, _) => ShowSettings();
 
-            var exitItem = CreateTrayMenuItem("退出");
+            var exitItem = new System.Windows.Controls.MenuItem
+            {
+                Header = "退出",
+                Icon = CreateEmptyMenuIcon()
+            };
             exitItem.Click += (_, _) => ExitApplication();
 
             menu.Items.Add(_enableMenuItem);
             menu.Items.Add(settingsItem);
             menu.Items.Add(exitItem);
 
-            menu.Opening += (_, _) =>
-            {
-                if (_enableMenuItem != null)
-                    _enableMenuItem.Checked = _translationEnabled;
-            };
-
-            menu.Opened += (_, _) => ApplyRoundedRegion(menu, 7);
-            menu.SizeChanged += (_, _) => ApplyRoundedRegion(menu, 7);
+            menu.Opened += (_, _) => UpdateTrayMenuState();
             return menu;
         }
 
-        private static Forms.ToolStripMenuItem CreateTrayMenuItem(string text)
+        private static FrameworkElement CreateEmptyMenuIcon()
         {
-            return new Forms.ToolStripMenuItem(text)
+            return new Border
             {
-                AutoSize = false,
-                Size = new Drawing.Size(205, 32),
-                ForeColor = Drawing.Color.White,
-                BackColor = Drawing.Color.Transparent,
-                Padding = new Forms.Padding(8, 0, 10, 0),
-                CheckOnClick = false
+                Width = 20,
+                Height = 20,
+                Background = Media.Brushes.Transparent
             };
         }
 
-        private static void ApplyRoundedRegion(Forms.Control control, int radius)
+        private void ShowTrayMenu()
         {
-            if (control.Width <= 0 || control.Height <= 0)
+            if (_trayMenu == null)
                 return;
 
-            using var path = CreateRoundedRectanglePath(
-                new Drawing.Rectangle(0, 0, control.Width, control.Height), radius);
-            control.Region?.Dispose();
-            control.Region = new Drawing.Region(path);
+            UpdateTrayMenuState();
+            _trayMenu.Placement = PlacementMode.MousePoint;
+            _trayMenu.IsOpen = true;
         }
 
-        private static Drawing2D.GraphicsPath CreateRoundedRectanglePath(Drawing.Rectangle bounds, int radius)
+        private void UpdateTrayMenuState()
         {
-            int diameter = radius * 2;
-            var path = new Drawing2D.GraphicsPath();
-            path.AddArc(bounds.Left, bounds.Top, diameter, diameter, 180, 90);
-            path.AddArc(bounds.Right - diameter - 1, bounds.Top, diameter, diameter, 270, 90);
-            path.AddArc(bounds.Right - diameter - 1, bounds.Bottom - diameter - 1, diameter, diameter, 0, 90);
-            path.AddArc(bounds.Left, bounds.Bottom - diameter - 1, diameter, diameter, 90, 90);
-            path.CloseFigure();
-            return path;
+            if (_enableCheckIcon != null)
+                _enableCheckIcon.Visibility = _translationEnabled ? Visibility.Visible : Visibility.Hidden;
         }
 
         private void ToggleTranslation()
@@ -283,8 +294,7 @@ namespace LiveCaptionsTranslator
             if (_mainWindow != null)
                 _mainWindow.SetOverlayEnabled(_translationEnabled);
 
-            if (_enableMenuItem != null)
-                _enableMenuItem.Checked = _translationEnabled;
+            UpdateTrayMenuState();
 
             if (_trayIcon != null)
             {
@@ -318,10 +328,15 @@ namespace LiveCaptionsTranslator
         private void ExitApplication()
         {
             _exiting = true;
+
+            if (_trayMenu != null)
+            {
+                _trayMenu.IsOpen = false;
+                _trayMenu = null;
+            }
+
             _trayIcon?.Dispose();
             _trayIcon = null;
-            _trayMenu?.Dispose();
-            _trayMenu = null;
             _trayEnabledIcon?.Dispose();
             _trayEnabledIcon = null;
             _trayDisabledIcon?.Dispose();
@@ -335,85 +350,6 @@ namespace LiveCaptionsTranslator
             {
                 LiveCaptionsHandler.RestoreLiveCaptions(Translator.Window);
                 LiveCaptionsHandler.KillLiveCaptions(Translator.Window);
-            }
-        }
-
-        private sealed class DarkTrayMenuColorTable : Forms.ProfessionalColorTable
-        {
-            private static readonly Drawing.Color Background = Drawing.Color.FromArgb(45, 45, 45);
-            private static readonly Drawing.Color Hover = Drawing.Color.FromArgb(61, 61, 61);
-            private static readonly Drawing.Color Border = Drawing.Color.FromArgb(82, 82, 82);
-
-            public override Drawing.Color ToolStripDropDownBackground => Background;
-            public override Drawing.Color ImageMarginGradientBegin => Background;
-            public override Drawing.Color ImageMarginGradientMiddle => Background;
-            public override Drawing.Color ImageMarginGradientEnd => Background;
-            public override Drawing.Color MenuItemSelected => Hover;
-            public override Drawing.Color MenuItemSelectedGradientBegin => Hover;
-            public override Drawing.Color MenuItemSelectedGradientEnd => Hover;
-            public override Drawing.Color MenuItemBorder => Drawing.Color.Transparent;
-            public override Drawing.Color MenuBorder => Border;
-            public override Drawing.Color SeparatorDark => Border;
-            public override Drawing.Color SeparatorLight => Border;
-        }
-
-        private sealed class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
-        {
-            public DarkTrayMenuRenderer() : base(new DarkTrayMenuColorTable())
-            {
-                RoundedEdges = true;
-            }
-
-            protected override void OnRenderItemText(Forms.ToolStripItemTextRenderEventArgs e)
-            {
-                e.TextColor = Drawing.Color.White;
-                base.OnRenderItemText(e);
-            }
-
-            protected override void OnRenderMenuItemBackground(Forms.ToolStripItemRenderEventArgs e)
-            {
-                var graphics = e.Graphics;
-                graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
-                var rect = new Drawing.Rectangle(3, 1, Math.Max(1, e.Item.Width - 6), Math.Max(1, e.Item.Height - 2));
-                var fill = e.Item.Selected
-                    ? Drawing.Color.FromArgb(61, 61, 61)
-                    : Drawing.Color.FromArgb(45, 45, 45);
-
-                using var brush = new Drawing.SolidBrush(fill);
-                using var path = CreateRoundedRectanglePath(rect, 5);
-                graphics.FillPath(brush, path);
-            }
-
-            protected override void OnRenderItemCheck(Forms.ToolStripItemImageRenderEventArgs e)
-            {
-                if (e.Item is not Forms.ToolStripMenuItem item || !item.Checked)
-                    return;
-
-                var graphics = e.Graphics;
-                graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
-                using var pen = new Drawing.Pen(Drawing.Color.White, 1.6f)
-                {
-                    StartCap = Drawing2D.LineCap.Round,
-                    EndCap = Drawing2D.LineCap.Round
-                };
-
-                int x = e.ImageRectangle.Left + 3;
-                int y = e.ImageRectangle.Top + e.ImageRectangle.Height / 2;
-                graphics.DrawLines(pen, new Drawing.Point[]
-                {
-                    new Drawing.Point(x, y),
-                    new Drawing.Point(x + 4, y + 4),
-                    new Drawing.Point(x + 11, y - 4)
-                });
-            }
-
-            protected override void OnRenderToolStripBorder(Forms.ToolStripRenderEventArgs e)
-            {
-                e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
-                var rect = new Drawing.Rectangle(0, 0, Math.Max(1, e.ToolStrip.Width - 1), Math.Max(1, e.ToolStrip.Height - 1));
-                using var pen = new Drawing.Pen(Drawing.Color.FromArgb(82, 82, 82), 1f);
-                using var path = CreateRoundedRectanglePath(rect, 7);
-                e.Graphics.DrawPath(pen, path);
             }
         }
 
