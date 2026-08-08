@@ -289,7 +289,7 @@ namespace LiveCaptionsTranslator
             {
                 Text = text,
                 FontFamily = new Media.FontFamily("Microsoft YaHei"),
-                FontSize = 10.5,
+                FontSize = 11.0,
                 FontWeight = FontWeights.Normal,
                 Foreground = new Media.SolidColorBrush(Media.Color.FromRgb(245, 245, 245)),
                 Margin = new Thickness(3, 0, 7, 0),
