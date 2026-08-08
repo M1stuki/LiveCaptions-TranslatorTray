@@ -20,6 +20,7 @@ namespace LiveCaptionsTranslator
         private static readonly TranslationTaskQueue translationTaskQueue = new();
         private static readonly object liveCaptionsLock = new();
         private static volatile bool engineEnabled = false;
+        private static volatile bool liveCaptionsHidden = true;
 
         public static AutomationElement? Window
         {
@@ -29,6 +30,19 @@ namespace LiveCaptionsTranslator
         public static Caption? Caption => caption;
         public static Setting? Setting => setting;
         public static bool EngineEnabled => engineEnabled;
+
+        // This is deliberately independent from EngineEnabled. If the user chooses
+        // "显示" for Windows Live Captions, stopping recognition may destroy the
+        // process, but the preference survives and is re-applied on the next launch.
+        public static bool LiveCaptionsHidden
+        {
+            get => liveCaptionsHidden;
+            set
+            {
+                liveCaptionsHidden = value;
+                ApplyLiveCaptionsVisibility();
+            }
+        }
 
         public static bool LogOnlyFlag { get; set; } = false;
         public static bool FirstUseFlag { get; set; } = false;
@@ -49,6 +63,9 @@ namespace LiveCaptionsTranslator
 
             if (FirstUseFlag)
             {
+                // Match the original first-run behavior: show Microsoft's Live Captions so
+                // the recognition language can be configured, and remember that preference.
+                liveCaptionsHidden = false;
                 try
                 {
                     window = LaunchAndPrepareLiveCaptions();
@@ -69,6 +86,8 @@ namespace LiveCaptionsTranslator
 
                 if (!IsLiveCaptionsAlive(window))
                     window = LaunchAndPrepareLiveCaptions();
+                else
+                    ApplyLiveCaptionsVisibility();
 
                 engineEnabled = true;
             }
@@ -121,9 +140,35 @@ namespace LiveCaptionsTranslator
         {
             var liveCaptionsWindow = LiveCaptionsHandler.LaunchLiveCaptions();
             LiveCaptionsHandler.FixLiveCaptions(liveCaptionsWindow);
-            LiveCaptionsHandler.HideLiveCaptions(liveCaptionsWindow);
+            window = liveCaptionsWindow;
+            ApplyLiveCaptionsVisibility();
             LiveCaptionsHandler.ResetCaptionCache();
             return liveCaptionsWindow;
+        }
+
+        public static void ApplyLiveCaptionsVisibility()
+        {
+            var currentWindow = window;
+            if (!IsLiveCaptionsAlive(currentWindow))
+                return;
+
+            try
+            {
+                if (liveCaptionsHidden)
+                    LiveCaptionsHandler.HideLiveCaptions(currentWindow!);
+                else
+                    LiveCaptionsHandler.RestoreLiveCaptions(currentWindow!);
+            }
+            catch (ElementNotAvailableException)
+            {
+                window = null;
+                LiveCaptionsHandler.ResetCaptionCache();
+            }
+            catch (InvalidOperationException)
+            {
+                window = null;
+                LiveCaptionsHandler.ResetCaptionCache();
+            }
         }
 
         private static bool IsLiveCaptionsAlive(AutomationElement? candidate)
