@@ -12,6 +12,10 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="SegoeFluentIcons">pack://application:,,,/;component/Fonts/#Segoe Fluent Icons</FontFamily>
+            <FontFamily x:Key="DefaultFont">Microsoft YaHei</FontFamily>
+            <Style TargetType="{x:Type Control}">
+                <Setter Property="FontFamily" Value="{StaticResource DefaultFont}" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
