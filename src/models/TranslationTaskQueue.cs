@@ -1,4 +1,4 @@
-﻿namespace LiveCaptionsTranslator.models
+namespace LiveCaptionsTranslator.models
 {
     public class TranslationTaskQueue
     {
@@ -21,11 +21,23 @@
             {
                 tasks.Add(newTranslationTask);
             }
-            // Run `OnTaskCompleted` in a new thread.
+
             newTranslationTask.Task.ContinueWith(
                 task => OnTaskCompleted(newTranslationTask),
                 TaskContinuationOptions.OnlyOnRanToCompletion
             );
+        }
+
+        public void CancelAll()
+        {
+            lock (_lock)
+            {
+                foreach (var task in tasks)
+                    task.CTS.Cancel();
+
+                tasks.Clear();
+                output = (string.Empty, false);
+            }
         }
 
         private async Task OnTaskCompleted(TranslationTask translationTask)
@@ -33,6 +45,12 @@
             lock (_lock)
             {
                 var index = tasks.IndexOf(translationTask);
+
+                // The engine may have been stopped while this request was finishing.
+                // In that case CancelAll() removed the task and its result must be ignored.
+                if (index < 0)
+                    return;
+
                 for (int i = 0; i < index; i++)
                     tasks[i].CTS.Cancel();
                 for (int i = index; i >= 0; i--)
@@ -42,7 +60,6 @@
             output = translationTask.Task.Result;
             var translatedText = output.Item1;
 
-            // Log after translation.
             bool isOverwrite = await Translator.IsOverwrite(translationTask.OriginalText);
             if (!isOverwrite)
                 await Translator.AddContexts();
