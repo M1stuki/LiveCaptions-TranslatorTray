@@ -23,6 +23,7 @@ namespace LiveCaptionsTranslator
             Loaded += (s, e) =>
             {
                 (App.Current.MainWindow as MainWindow)?.AutoHeightAdjust(maxHeight: (int)App.Current.MainWindow.MinHeight);
+                RefreshLiveCaptionsButton();
                 CheckForFirstUse();
             };
 
@@ -34,20 +35,16 @@ namespace LiveCaptionsTranslator
 
         private void LiveCaptionsButton_click(object sender, RoutedEventArgs e)
         {
-            if (Translator.Window == null)
-                return;
+            // Keep the user's show/hide choice even while the recognition engine is stopped.
+            // This prevents the tray StopEngine/StartEngine cycle from losing UI state.
+            Translator.LiveCaptionsHidden = !Translator.LiveCaptionsHidden;
+            RefreshLiveCaptionsButton();
+        }
 
-            bool isHide = Translator.Window.Current.BoundingRectangle == Rect.Empty;
-            if (isHide)
-            {
-                LiveCaptionsHandler.RestoreLiveCaptions(Translator.Window);
-                ButtonText.Text = "隐藏";
-            }
-            else
-            {
-                LiveCaptionsHandler.HideLiveCaptions(Translator.Window);
-                ButtonText.Text = "显示";
-            }
+        private void RefreshLiveCaptionsButton()
+        {
+            // The text describes the action that will happen next.
+            ButtonText.Text = Translator.LiveCaptionsHidden ? "显示" : "隐藏";
         }
 
         private void TranslateAPIBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -168,7 +165,10 @@ namespace LiveCaptionsTranslator
         private void CheckForFirstUse()
         {
             if (Translator.FirstUseFlag)
-                ButtonText.Text = "隐藏";
+            {
+                Translator.LiveCaptionsHidden = false;
+                RefreshLiveCaptionsButton();
+            }
         }
 
         public void LoadAPISetting()
