@@ -9,6 +9,7 @@ using LiveCaptionsTranslator.utils;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
 using TrayNotifyIcon = Wpf.Ui.Tray.Controls.NotifyIcon;
+using MenuItem = System.Windows.Controls.MenuItem;
 
 namespace LiveCaptionsTranslator
 {
