@@ -1,89 +1,45 @@
-name: CI/CD Pipeline
+name: Build Tray win-x64 withruntime
 
 on:
   push:
     branches:
-      - "*"
-    tags:
-      - "v*"
-    paths:
-      - "src/**"
-      - "Properties/**"
-      - ".github/workflows/**"
-  pull_request:
+      - master
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build win-x64 withruntime
     runs-on: windows-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
       - name: Restore Dependencies
         run: dotnet restore
 
-      - name: Check code formatting
-        run: dotnet format ./LiveCaptionsTranslator.csproj --verify-no-changes --verbosity diagnostic
-
-      - name: Build
+      - name: Publish self-contained single EXE
+        shell: pwsh
         run: |
-          dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish/x64/selfcontained
-          del ./publish/x64/selfcontained/*.pdb 2>nul || echo "No pdb found in x64 selfcontained"
+          dotnet publish ./LiveCaptionsTranslator.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish
+          Remove-Item ./publish/*.pdb -ErrorAction SilentlyContinue
+          Rename-Item ./publish/LiveCaptionsTranslator.exe LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.exe
 
-          dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ./publish/x64/framework
-          del ./publish/x64/framework/*.pdb 2>nul || echo "No pdb found in x64 framework"
+      - name: Verify EXE size
+        shell: pwsh
+        run: |
+          $file = Get-Item ./publish/LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.exe
+          Write-Host "Built EXE size: $($file.Length) bytes"
+          if ($file.Length -lt 30000000) { throw "Self-contained EXE is unexpectedly small." }
 
-          dotnet publish -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish/arm64/selfcontained
-          del ./publish/arm64/selfcontained/*.pdb 2>nul || echo "No pdb found in arm64 selfcontained"
-
-          dotnet publish -c Release -r win-arm64 --self-contained false -p:PublishSingleFile=true -o ./publish/arm64/framework
-          del ./publish/arm64/framework/*.pdb 2>nul || echo "No pdb found in arm64 framework"
-
-      - name: Run Tests
-        run: dotnet test --verbosity normal
-
-      - name: Upload Build Artifacts
+      - name: Upload withruntime EXE
         uses: actions/upload-artifact@v4
         with:
-          name: LiveCaptionsTranslator
-          path: ./publish
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: LiveCaptionsTranslator
-          path: ./release
-
-      - name: Create ZIP Files and rename EXE
-        run: |
-          cd release
-          mv x64/framework/LiveCaptionsTranslator.exe LiveCaptionsTranslator-win-x64.exe
-          mv arm64/framework/LiveCaptionsTranslator.exe LiveCaptionsTranslator-win-arm64.exe
-          mv x64/selfcontained/LiveCaptionsTranslator.exe LiveCaptionsTranslator-win-x64-withruntime.exe
-          mv arm64/selfcontained/LiveCaptionsTranslator.exe LiveCaptionsTranslator-win-arm64-withruntime.exe
-
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release/LiveCaptionsTranslator-win-x64.exe
-            release/LiveCaptionsTranslator-win-x64-withruntime.exe
-            release/LiveCaptionsTranslator-win-arm64.exe
-            release/LiveCaptionsTranslator-win-arm64-withruntime.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime
+          path: ./publish/LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.exe
+          if-no-files-found: error
