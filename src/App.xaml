@@ -22,12 +22,17 @@
             <Style x:Key="TrayPopupItemStyle" TargetType="{x:Type Button}">
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="FontFamily" Value="Microsoft YaHei" />
-                <Setter Property="FontSize" Value="10.5" />
+                <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
+                <Setter Property="FontSize" Value="9.25" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="22" />
-                <Setter Property="MinWidth" Value="116" />
+                <Setter Property="Height" Value="21" />
+                <Setter Property="MinWidth" Value="110" />
                 <Setter Property="Padding" Value="0" />
+                <Setter Property="UseLayoutRounding" Value="True" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                <Setter Property="TextOptions.TextHintingMode" Value="Fixed" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Template">
                     <Setter.Value>
@@ -41,7 +46,8 @@
                                 <ContentPresenter
                                     Margin="0"
                                     HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                    VerticalAlignment="Center" />
+                                    VerticalAlignment="Center"
+                                    SnapsToDevicePixels="True" />
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
@@ -56,31 +62,37 @@
                 </Setter>
             </Style>
 
-            <!-- Compact Fluent tray menu. -->
+            <!-- Compact, pixel-aligned Fluent tray menu for high-DPI displays. -->
             <Style x:Key="TrayContextMenuItemStyle" TargetType="{x:Type MenuItem}">
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="10.25" />
+                <Setter Property="FontSize" Value="9.25" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="23" />
-                <Setter Property="MinWidth" Value="116" />
+                <Setter Property="Height" Value="21" />
+                <Setter Property="MinWidth" Value="110" />
                 <Setter Property="Padding" Value="0" />
+                <Setter Property="UseLayoutRounding" Value="True" />
+                <Setter Property="SnapsToDevicePixels" Value="True" />
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                <Setter Property="TextOptions.TextHintingMode" Value="Fixed" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type MenuItem}">
                             <Border
                                 x:Name="ItemBorder"
-                                Margin="4,0.5"
+                                Margin="3,0.5"
                                 Background="{TemplateBinding Background}"
                                 CornerRadius="4"
                                 SnapsToDevicePixels="True">
                                 <ContentPresenter
-                                    Margin="9,0,9,0"
+                                    Margin="8,0,8,0"
                                     VerticalAlignment="Center"
                                     ContentSource="Header"
                                     RecognizesAccessKey="True"
+                                    SnapsToDevicePixels="True"
                                     TextElement.Foreground="{TemplateBinding Foreground}" />
                             </Border>
                             <ControlTemplate.Triggers>
