@@ -285,7 +285,7 @@ namespace LiveCaptionsTranslator
             icon.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(icon, 0);
 
-            var label = new TextBlock
+            var label = new System.Windows.Controls.TextBlock
             {
                 Text = text,
                 FontFamily = new Media.FontFamily("Microsoft YaHei"),
