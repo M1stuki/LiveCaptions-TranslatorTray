@@ -228,10 +228,18 @@ namespace LiveCaptionsTranslator
             var menu = new WpfContextMenu
             {
                 FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
-                FontSize = 10.25,
-                MinWidth = 124,
-                StaysOpen = false
+                FontSize = 9.25,
+                MinWidth = 116,
+                StaysOpen = false,
+                UseLayoutRounding = true,
+                SnapsToDevicePixels = true
             };
+
+            // The tray popup is a separate HWND. Explicit text metrics avoid fractional glyph
+            // placement on high-DPI displays instead of relying on inherited WPF defaults.
+            Media.TextOptions.SetTextFormattingMode(menu, Media.TextFormattingMode.Display);
+            Media.TextOptions.SetTextRenderingMode(menu, Media.TextRenderingMode.ClearType);
+            Media.TextOptions.SetTextHintingMode(menu, Media.TextHintingMode.Fixed);
 
             ApplyDarkTrayMenuPalette(menu);
 
