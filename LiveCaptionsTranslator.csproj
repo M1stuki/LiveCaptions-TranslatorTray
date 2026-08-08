@@ -13,6 +13,7 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>false</SelfContained>
 		<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 
 		<Title>LiveCaptions Translator</Title>
 		<Description>A real-time speech translation tool based on Windows LiveCaptions.</Description>
