@@ -86,8 +86,8 @@ namespace LiveCaptionsTranslator
                 System.Windows.MessageBox.Show(
                     $"无法打开 API 设置。\n\n{ex.Message}",
                     "API 设置",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
