@@ -22,7 +22,6 @@ namespace LiveCaptionsTranslator
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             Translator.Setting?.Save();
 
-            // Start disabled: no translation API calls until the tray icon is enabled.
             Translator.LogOnlyFlag = true;
 
             Task.Run(() => Translator.SyncLoop());
@@ -62,7 +61,6 @@ namespace LiveCaptionsTranslator
             }
             catch
             {
-                // Ignore and fall back to a system icon below.
             }
 
             _trayEnabledIcon = appIcon != null ? (Icon)appIcon.Clone() : (Icon)SystemIcons.Application.Clone();
@@ -89,15 +87,15 @@ namespace LiveCaptionsTranslator
             using var bitmap = new Bitmap(32, 32, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             using (var graphics = Graphics.FromImage(bitmap))
             {
-                graphics.Clear(Color.Transparent);
+                graphics.Clear(System.Drawing.Color.Transparent);
                 graphics.DrawIcon(source, new Rectangle(0, 0, 32, 32));
                 graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                using var darkPen = new Pen(Color.FromArgb(210, 0, 0, 0), 5.2f)
+                using var darkPen = new Pen(System.Drawing.Color.FromArgb(210, 0, 0, 0), 5.2f)
                 {
                     StartCap = System.Drawing.Drawing2D.LineCap.Round,
                     EndCap = System.Drawing.Drawing2D.LineCap.Round
                 };
-                using var whitePen = new Pen(Color.White, 3.1f)
+                using var whitePen = new Pen(System.Drawing.Color.White, 3.1f)
                 {
                     StartCap = System.Drawing.Drawing2D.LineCap.Round,
                     EndCap = System.Drawing.Drawing2D.LineCap.Round
