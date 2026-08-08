@@ -36,7 +36,7 @@ jobs:
       - name: Publish compact framework-dependent EXE
         shell: pwsh
         run: |
-          dotnet publish ./LiveCaptionsTranslator.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish-compact
+          dotnet publish ./LiveCaptionsTranslator.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ./publish-compact
           Remove-Item ./publish-compact/*.pdb -ErrorAction SilentlyContinue
           Rename-Item ./publish-compact/LiveCaptionsTranslator.exe LiveCaptionsTranslator-Tray-ZH-win-x64.exe
 
