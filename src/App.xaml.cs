@@ -97,6 +97,8 @@ namespace LiveCaptionsTranslator
 
         private static Drawing.Icon CreateFluentTrayIcon(SymbolRegular symbol)
         {
+            // Keep a 32px shell icon, but make the Fluent glyph nearly fill the canvas.
+            // This produces a noticeably larger visual mark on high-DPI / 4K taskbars.
             const int size = 32;
 
             var fontFamily = Current.TryFindResource("FluentSystemIcons") as Media.FontFamily;
@@ -109,7 +111,7 @@ namespace LiveCaptionsTranslator
                 Height = size,
                 Text = symbol.GetString(),
                 FontFamily = fontFamily,
-                FontSize = 25,
+                FontSize = 31,
                 Foreground = Media.Brushes.White,
                 Background = Media.Brushes.Transparent,
                 TextAlignment = TextAlignment.Center,
@@ -119,7 +121,7 @@ namespace LiveCaptionsTranslator
             };
 
             glyph.Measure(new System.Windows.Size(size, size));
-            glyph.Arrange(new Rect(0, 0, size, size));
+            glyph.Arrange(new Rect(0, -1, size, size + 2));
             glyph.UpdateLayout();
 
             var render = new Imaging.RenderTargetBitmap(
@@ -149,14 +151,14 @@ namespace LiveCaptionsTranslator
                 graphics.Clear(Drawing.Color.Transparent);
                 graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
 
-                using var pen = new Drawing.Pen(Drawing.Color.White, 2.2f)
+                using var pen = new Drawing.Pen(Drawing.Color.White, 2.6f)
                 {
                     StartCap = Drawing2D.LineCap.Round,
                     EndCap = Drawing2D.LineCap.Round,
                     LineJoin = Drawing2D.LineJoin.Round
                 };
 
-                var rect = new Drawing.RectangleF(4.5f, 7.5f, 23f, 17f);
+                var rect = new Drawing.RectangleF(2.5f, 5.5f, 27f, 21f);
                 using (var path = new Drawing2D.GraphicsPath())
                 {
                     const float radius = 4f;
@@ -169,17 +171,17 @@ namespace LiveCaptionsTranslator
                     graphics.DrawPath(pen, path);
                 }
 
-                using var font = new Drawing.Font("Segoe UI", 8.7f, Drawing.FontStyle.Bold, Drawing.GraphicsUnit.Pixel);
+                using var font = new Drawing.Font("Segoe UI", 10.5f, Drawing.FontStyle.Bold, Drawing.GraphicsUnit.Pixel);
                 using var brush = new Drawing.SolidBrush(Drawing.Color.White);
                 using var format = new Drawing.StringFormat
                 {
                     Alignment = Drawing.StringAlignment.Center,
                     LineAlignment = Drawing.StringAlignment.Center
                 };
-                graphics.DrawString("CC", font, brush, new Drawing.RectangleF(5, 8, 22, 16), format);
+                graphics.DrawString("CC", font, brush, new Drawing.RectangleF(3, 6, 26, 20), format);
 
                 if (off)
-                    graphics.DrawLine(pen, 7, 25, 25, 7);
+                    graphics.DrawLine(pen, 5, 27, 27, 5);
             }
 
             return IconFromBitmap(bitmap);
@@ -205,10 +207,10 @@ namespace LiveCaptionsTranslator
             {
                 BackColor = Drawing.Color.FromArgb(45, 45, 45),
                 ForeColor = Drawing.Color.White,
-                Font = new Drawing.Font("Microsoft YaHei UI", 10.5f, Drawing.FontStyle.Regular),
+                Font = new Drawing.Font("Microsoft YaHei UI", 9.0f, Drawing.FontStyle.Regular),
                 ShowImageMargin = false,
                 ShowCheckMargin = true,
-                Padding = new Forms.Padding(5, 7, 5, 7),
+                Padding = new Forms.Padding(5, 5, 5, 5),
                 Renderer = new DarkTrayMenuRenderer()
             };
 
@@ -241,10 +243,10 @@ namespace LiveCaptionsTranslator
             return new Forms.ToolStripMenuItem(text)
             {
                 AutoSize = false,
-                Size = new Drawing.Size(245, 38),
+                Size = new Drawing.Size(205, 32),
                 ForeColor = Drawing.Color.White,
                 BackColor = Drawing.Color.Transparent,
-                Padding = new Forms.Padding(9, 0, 12, 0),
+                Padding = new Forms.Padding(8, 0, 10, 0),
                 CheckOnClick = false
             };
         }
@@ -389,7 +391,7 @@ namespace LiveCaptionsTranslator
 
                 var graphics = e.Graphics;
                 graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
-                using var pen = new Drawing.Pen(Drawing.Color.White, 1.8f)
+                using var pen = new Drawing.Pen(Drawing.Color.White, 1.6f)
                 {
                     StartCap = Drawing2D.LineCap.Round,
                     EndCap = Drawing2D.LineCap.Round
