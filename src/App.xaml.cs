@@ -323,12 +323,12 @@ namespace LiveCaptionsTranslator
 
                 int x = e.ImageRectangle.Left + 3;
                 int y = e.ImageRectangle.Top + e.ImageRectangle.Height / 2;
-                graphics.DrawLines(pen,
-                [
+                graphics.DrawLines(pen, new System.Drawing.Point[]
+                {
                     new System.Drawing.Point(x, y),
                     new System.Drawing.Point(x + 4, y + 4),
                     new System.Drawing.Point(x + 11, y - 4)
-                ]);
+                });
             }
 
             protected override void OnRenderToolStripBorder(Forms.ToolStripRenderEventArgs e)
