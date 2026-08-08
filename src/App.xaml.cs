@@ -62,13 +62,11 @@ namespace LiveCaptionsTranslator
         {
             try
             {
-                // Original WPF-UI Fluent System Icons, rendered white for dark taskbars.
                 _trayEnabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaption24);
                 _trayDisabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaptionOff24);
             }
             catch
             {
-                // Do not fall back to the EXE icon. Keep a white caption-style symbol instead.
                 _trayEnabledIcon = CreateFallbackCaptionIcon(false);
                 _trayDisabledIcon = CreateFallbackCaptionIcon(true);
             }
@@ -92,7 +90,6 @@ namespace LiveCaptionsTranslator
             }
             catch
             {
-                // If NotifyIcon itself fails, keep the program usable instead of silently exiting.
                 _mainWindow?.Show();
                 _mainWindow?.Activate();
             }
@@ -106,7 +103,7 @@ namespace LiveCaptionsTranslator
             if (fontFamily == null)
                 throw new InvalidOperationException("FluentSystemIcons font resource was not found.");
 
-            var glyph = new TextBlock
+            var glyph = new System.Windows.Controls.TextBlock
             {
                 Width = size,
                 Height = size,
