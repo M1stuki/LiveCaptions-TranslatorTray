@@ -6,6 +6,9 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build win-x64 withruntime
@@ -37,9 +40,31 @@ jobs:
           Write-Host "Built EXE size: $($file.Length) bytes"
           if ($file.Length -lt 30000000) { throw "Self-contained EXE is unexpectedly small." }
 
-      - name: Upload withruntime EXE
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./publish/LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.exe -DestinationPath ./LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.zip -Force
+
+      - name: Upload Actions artifact
         uses: actions/upload-artifact@v4
         with:
           name: LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime
           path: ./publish/LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.exe
           if-no-files-found: error
+
+      - name: Publish stable GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "tray-zh-latest"
+          $repo = "${{ github.repository }}"
+          $exe = "./publish/LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.exe"
+          $zip = "./LiveCaptionsTranslator-Tray-ZH-win-x64-withruntime.zip"
+
+          gh release view $tag --repo $repo *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $exe $zip --clobber --repo $repo
+          } else {
+            gh release create $tag $exe $zip --repo $repo --target "${{ github.sha }}" --title "LiveCaptions Translator 托盘中文版（最新版）" --notes "自动发布的 win-x64 self-contained / withruntime 单文件版本。仅汉化界面并保留原翻译逻辑。" --latest=false
+          }
