@@ -11,10 +11,90 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
+
             <FontFamily x:Key="SegoeFluentIcons">pack://application:,,,/;component/Fonts/#Segoe Fluent Icons</FontFamily>
             <FontFamily x:Key="DefaultFont">Microsoft YaHei</FontFamily>
+
             <Style TargetType="{x:Type Control}">
                 <Setter Property="FontFamily" Value="{StaticResource DefaultFont}" />
+            </Style>
+
+            <Style x:Key="TrayContextMenuStyle" TargetType="{x:Type ContextMenu}">
+                <Setter Property="Background" Value="#2C2C2C" />
+                <Setter Property="Foreground" Value="#F5F5F5" />
+                <Setter Property="BorderBrush" Value="#474747" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="FontFamily" Value="Microsoft YaHei" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="4" />
+                <Setter Property="MinWidth" Value="140" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ContextMenu}">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                                <ItemsPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="TrayMenuItemStyle" TargetType="{x:Type MenuItem}">
+                <Setter Property="Foreground" Value="#F5F5F5" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="FontFamily" Value="Microsoft YaHei" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="Height" Value="28" />
+                <Setter Property="MinWidth" Value="132" />
+                <Setter Property="Padding" Value="4,0,8,0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type MenuItem}">
+                            <Border
+                                x:Name="ItemBorder"
+                                Margin="0,1"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                                <Grid Height="{TemplateBinding Height}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter
+                                        Grid.Column="0"
+                                        Width="16"
+                                        Height="16"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        ContentSource="Icon" />
+                                    <ContentPresenter
+                                        Grid.Column="1"
+                                        Margin="5,0,8,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        ContentSource="Header"
+                                        RecognizesAccessKey="False" />
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="#3A3A3A" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Foreground" Value="#777777" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
         </ResourceDictionary>
     </Application.Resources>
