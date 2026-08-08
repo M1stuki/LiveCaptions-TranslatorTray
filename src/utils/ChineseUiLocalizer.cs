@@ -110,27 +110,29 @@ namespace LiveCaptionsTranslator.Utils
         public static void ApplyElement(FrameworkElement element)
         {
             if (element is Window window && !string.IsNullOrWhiteSpace(window.Title))
-                window.Title = Translate(window.Title);
+            {
+                var translatedTitle = Translate(window.Title);
+                if (translatedTitle != window.Title)
+                    window.Title = translatedTitle;
+            }
 
             if (element.ToolTip is string tooltip)
-                element.ToolTip = Translate(tooltip);
+            {
+                var translatedTooltip = Translate(tooltip);
+                if (translatedTooltip != tooltip)
+                    element.ToolTip = translatedTooltip;
+            }
 
             if (element is TextBlock textBlock)
             {
-                // TextBlocks containing Runs are localized per Run so formatting is preserved.
-                if (textBlock.Inlines.Count > 1 || (textBlock.Inlines.FirstInline is Run && textBlock.Text != textBlock.Inlines.FirstInline.ToString()))
+                foreach (Inline inline in textBlock.Inlines)
                 {
-                    foreach (Inline inline in textBlock.Inlines)
+                    if (inline is Run run && !string.IsNullOrEmpty(run.Text))
                     {
-                        if (inline is Run run && !string.IsNullOrEmpty(run.Text))
-                            run.Text = Translate(run.Text);
+                        var translated = Translate(run.Text);
+                        if (translated != run.Text)
+                            run.Text = translated;
                     }
-                }
-                else if (!string.IsNullOrWhiteSpace(textBlock.Text))
-                {
-                    var translated = Translate(textBlock.Text);
-                    if (!ReferenceEquals(translated, textBlock.Text) && translated != textBlock.Text)
-                        textBlock.Text = translated;
                 }
             }
 
@@ -151,9 +153,7 @@ namespace LiveCaptionsTranslator.Utils
 
         private static string Translate(string text)
         {
-            if (Map.TryGetValue(text, out var translated))
-                return translated;
-            return text;
+            return Map.TryGetValue(text, out var translated) ? translated : text;
         }
     }
 }
