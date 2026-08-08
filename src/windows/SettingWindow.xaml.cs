@@ -7,7 +7,6 @@ using Wpf.Ui.Controls;
 
 using LiveCaptionsTranslator.apis;
 using LiveCaptionsTranslator.models;
-using LiveCaptionsTranslator.Utils;
 using Button = Wpf.Ui.Controls.Button;
 using TextBlock = Wpf.Ui.Controls.TextBlock;
 using ComboBox = System.Windows.Controls.ComboBox;
@@ -24,10 +23,6 @@ namespace LiveCaptionsTranslator
             InitializeComponent();
             ApplicationThemeManager.ApplySystemTheme();
             DataContext = Translator.Setting;
-
-            // Temporary compatibility pass for the large API configuration XAML.
-            // Run it before the window is shown, never after it becomes visible.
-            ChineseUiLocalizer.Apply(this);
 
             Loaded += (sender, args) =>
             {
