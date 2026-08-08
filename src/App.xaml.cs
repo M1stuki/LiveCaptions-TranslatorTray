@@ -214,7 +214,8 @@ namespace LiveCaptionsTranslator
 
             ApplyDarkTrayMenuPalette(menu);
 
-            _enableMenuItem = CreateTrayMenuItem("启用字幕", isCheckable: true);
+            // No checkbox column: this item describes the action that will happen next.
+            _enableMenuItem = CreateTrayMenuItem("开启字幕");
             _enableMenuItem.Click += (_, _) => ToggleTranslation();
 
             var settingsItem = CreateTrayMenuItem("设置");
@@ -254,12 +255,12 @@ namespace LiveCaptionsTranslator
             menu.Resources["MenuBarItemTextForegroundPressed"] = pressedText;
         }
 
-        private static WpfMenuItem CreateTrayMenuItem(string text, bool isCheckable = false)
+        private static WpfMenuItem CreateTrayMenuItem(string text)
         {
             return new WpfMenuItem
             {
                 Header = text,
-                IsCheckable = isCheckable,
+                IsCheckable = false,
                 StaysOpenOnClick = false,
                 MinHeight = 30,
                 Margin = new Thickness(0)
@@ -285,7 +286,7 @@ namespace LiveCaptionsTranslator
         private void UpdateTrayMenuState()
         {
             if (_enableMenuItem != null)
-                _enableMenuItem.IsChecked = _translationEnabled;
+                _enableMenuItem.Header = _translationEnabled ? "关闭字幕" : "开启字幕";
         }
 
         private void ToggleTranslation()
