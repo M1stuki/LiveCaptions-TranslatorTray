@@ -203,14 +203,16 @@ namespace LiveCaptionsTranslator
 
         private WpfContextMenu BuildTrayMenu()
         {
-            // This is the same WPF-UI ContextMenu/MenuItem styling used inside the app:
-            // rounded Fluent surface, shadow, hover states, and generous inner spacing.
+            // Keep the modern WPF-UI Fluent template, but size it only slightly larger
+            // than the earlier compact native menu.
             var menu = new WpfContextMenu
             {
                 FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
-                FontSize = 15.0,
-                MinWidth = 160
+                FontSize = 12.0,
+                MinWidth = 140
             };
+
+            ApplyDarkTrayMenuPalette(menu);
 
             _enableMenuItem = CreateTrayMenuItem("启用字幕", isCheckable: true);
             _enableMenuItem.Click += (_, _) => ToggleTranslation();
@@ -229,6 +231,29 @@ namespace LiveCaptionsTranslator
             return menu;
         }
 
+        private static void ApplyDarkTrayMenuPalette(WpfContextMenu menu)
+        {
+            // ContextMenu is rendered in its own Popup visual tree. Explicitly seed the
+            // WPF-UI resources here so it stays dark even when Windows itself is in light mode.
+            var background = new Media.SolidColorBrush(Media.Color.FromRgb(44, 44, 44));
+            var foreground = new Media.SolidColorBrush(Media.Color.FromRgb(245, 245, 245));
+            var border = new Media.SolidColorBrush(Media.Color.FromArgb(0x33, 0, 0, 0));
+            var hover = new Media.SolidColorBrush(Media.Color.FromArgb(0x0F, 255, 255, 255));
+            var pressed = new Media.SolidColorBrush(Media.Color.FromArgb(0x0A, 255, 255, 255));
+            var pressedText = new Media.SolidColorBrush(Media.Color.FromArgb(0xC5, 255, 255, 255));
+
+            menu.Background = background;
+            menu.Foreground = foreground;
+            menu.BorderBrush = border;
+
+            menu.Resources["ContextMenuBackground"] = background;
+            menu.Resources["ContextMenuForeground"] = foreground;
+            menu.Resources["ContextMenuBorderBrush"] = border;
+            menu.Resources["MenuBarItemBackgroundSelected"] = hover;
+            menu.Resources["MenuBarItemBackgroundPressed"] = pressed;
+            menu.Resources["MenuBarItemTextForegroundPressed"] = pressedText;
+        }
+
         private static WpfMenuItem CreateTrayMenuItem(string text, bool isCheckable = false)
         {
             return new WpfMenuItem
@@ -236,8 +261,8 @@ namespace LiveCaptionsTranslator
                 Header = text,
                 IsCheckable = isCheckable,
                 StaysOpenOnClick = false,
-                MinHeight = 36,
-                Margin = new Thickness(3, 1, 3, 1)
+                MinHeight = 30,
+                Margin = new Thickness(0)
             };
         }
 
