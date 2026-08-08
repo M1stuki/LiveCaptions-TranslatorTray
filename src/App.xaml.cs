@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using Forms = System.Windows.Forms;
@@ -227,8 +228,8 @@ namespace LiveCaptionsTranslator
             var menu = new WpfContextMenu
             {
                 FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
-                FontSize = 11.0,
-                MinWidth = 128,
+                FontSize = 10.25,
+                MinWidth = 124,
                 StaysOpen = false
             };
 
@@ -331,6 +332,16 @@ namespace LiveCaptionsTranslator
                     Translator.LogOnlyFlag = true;
                     _mainWindow?.SetOverlayEnabled(false);
                     await Task.Run(Translator.StopEngine);
+
+                    // WPF/.NET deliberately keeps committed pages around for reuse. When the
+                    // app enters explicit tray-idle mode, collect dead UI/translation objects
+                    // and ask Windows to trim the process working set. This reduces the memory
+                    // shown by Task Manager without keeping recognition alive in the background.
+                    if (_mainWindow == null || !_mainWindow.IsVisible)
+                    {
+                        await Task.Delay(120);
+                        TrimIdleMemory();
+                    }
                 }
                 else
                 {
@@ -366,6 +377,26 @@ namespace LiveCaptionsTranslator
                 _translationToggleBusy = false;
                 UpdateTrayMenuState();
                 UpdateTrayIconState();
+            }
+        }
+
+        private static void TrimIdleMemory()
+        {
+            try
+            {
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
+
+                using var process = Process.GetCurrentProcess();
+                _ = NativeMethods.SetProcessWorkingSetSize(
+                    process.Handle,
+                    new IntPtr(-1),
+                    new IntPtr(-1));
+            }
+            catch
+            {
+                // Memory trimming is an idle optimization only; it must never affect toggling.
             }
         }
 
@@ -448,6 +479,10 @@ namespace LiveCaptionsTranslator
             [System.Runtime.InteropServices.DllImport("user32.dll")]
             [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
             public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+            public static extern bool SetProcessWorkingSetSize(IntPtr hProcess, IntPtr minSize, IntPtr maxSize);
         }
     }
 }
