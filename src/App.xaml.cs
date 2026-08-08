@@ -21,8 +21,7 @@ namespace LiveCaptionsTranslator
         private Forms.NotifyIcon? _trayIcon;
         private Drawing.Icon? _trayEnabledIcon;
         private Drawing.Icon? _trayDisabledIcon;
-        private System.Windows.Controls.ContextMenu? _trayMenu;
-        private System.Windows.Controls.MenuItem? _enableMenuItem;
+        private Popup? _trayPopup;
         private SymbolIcon? _enableCheckIcon;
         private MainWindow? _mainWindow;
         private bool _translationEnabled;
@@ -75,7 +74,7 @@ namespace LiveCaptionsTranslator
 
             try
             {
-                _trayMenu = BuildTrayMenu();
+                _trayPopup = BuildTrayPopup();
                 _trayIcon = new Forms.NotifyIcon
                 {
                     Visible = true,
@@ -209,74 +208,130 @@ namespace LiveCaptionsTranslator
             }
         }
 
-        private System.Windows.Controls.ContextMenu BuildTrayMenu()
+        private Popup BuildTrayPopup()
         {
-            var menuStyle = (Style)FindResource("TrayContextMenuStyle");
-            var itemStyle = (Style)FindResource("TrayMenuItemStyle");
+            var itemStyle = (Style)FindResource("TrayPopupItemStyle");
 
-            var menu = new System.Windows.Controls.ContextMenu
+            var panel = new StackPanel
             {
-                Style = menuStyle,
-                Placement = PlacementMode.MousePoint,
-                StaysOpen = false
+                Width = 116
             };
 
-            _enableCheckIcon = new SymbolIcon(SymbolRegular.Checkmark20, 14)
+            _enableCheckIcon = new SymbolIcon(SymbolRegular.Checkmark20, 11)
             {
                 Visibility = Visibility.Hidden,
-                Foreground = Media.Brushes.White
+                Foreground = Media.Brushes.White,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
             };
 
-            _enableMenuItem = new System.Windows.Controls.MenuItem
+            var enableItem = CreateTrayPopupItem("启用字幕", _enableCheckIcon, itemStyle);
+            enableItem.Click += (_, _) =>
             {
-                Header = "启用字幕",
-                Icon = _enableCheckIcon,
-                Style = itemStyle
+                CloseTrayPopup();
+                ToggleTranslation();
             };
-            _enableMenuItem.Click += (_, _) => ToggleTranslation();
 
-            var settingsItem = new System.Windows.Controls.MenuItem
+            var settingsItem = CreateTrayPopupItem("设置", CreateEmptyMenuIcon(), itemStyle);
+            settingsItem.Click += (_, _) =>
             {
-                Header = "设置",
-                Icon = CreateEmptyMenuIcon(),
-                Style = itemStyle
+                CloseTrayPopup();
+                ShowSettings();
             };
-            settingsItem.Click += (_, _) => ShowSettings();
 
-            var exitItem = new System.Windows.Controls.MenuItem
+            var exitItem = CreateTrayPopupItem("退出", CreateEmptyMenuIcon(), itemStyle);
+            exitItem.Click += (_, _) =>
             {
-                Header = "退出",
-                Icon = CreateEmptyMenuIcon(),
-                Style = itemStyle
+                CloseTrayPopup();
+                ExitApplication();
             };
-            exitItem.Click += (_, _) => ExitApplication();
 
-            menu.Items.Add(_enableMenuItem);
-            menu.Items.Add(settingsItem);
-            menu.Items.Add(exitItem);
+            panel.Children.Add(enableItem);
+            panel.Children.Add(settingsItem);
+            panel.Children.Add(exitItem);
 
-            menu.Opened += (_, _) => UpdateTrayMenuState();
-            return menu;
+            var popupBorder = new Border
+            {
+                Background = new Media.SolidColorBrush(Media.Color.FromRgb(44, 44, 44)),
+                BorderBrush = new Media.SolidColorBrush(Media.Color.FromRgb(71, 71, 71)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(3),
+                Child = panel,
+                SnapsToDevicePixels = true
+            };
+
+            return new Popup
+            {
+                AllowsTransparency = true,
+                StaysOpen = false,
+                Placement = PlacementMode.MousePoint,
+                Child = popupBorder
+            };
+        }
+
+        private static Button CreateTrayPopupItem(string text, FrameworkElement icon, Style style)
+        {
+            var grid = new Grid
+            {
+                Height = 22
+            };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(18) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            icon.Width = 12;
+            icon.Height = 12;
+            icon.HorizontalAlignment = HorizontalAlignment.Center;
+            icon.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(icon, 0);
+
+            var label = new TextBlock
+            {
+                Text = text,
+                FontFamily = new Media.FontFamily("Microsoft YaHei"),
+                FontSize = 10.5,
+                FontWeight = FontWeights.Normal,
+                Foreground = new Media.SolidColorBrush(Media.Color.FromRgb(245, 245, 245)),
+                Margin = new Thickness(3, 0, 7, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(label, 1);
+
+            grid.Children.Add(icon);
+            grid.Children.Add(label);
+
+            return new Button
+            {
+                Style = style,
+                Content = grid
+            };
         }
 
         private static FrameworkElement CreateEmptyMenuIcon()
         {
             return new Border
             {
-                Width = 16,
-                Height = 16,
+                Width = 12,
+                Height = 12,
                 Background = Media.Brushes.Transparent
             };
         }
 
         private void ShowTrayMenu()
         {
-            if (_trayMenu == null)
+            if (_trayPopup == null)
                 return;
 
             UpdateTrayMenuState();
-            _trayMenu.Placement = PlacementMode.MousePoint;
-            _trayMenu.IsOpen = true;
+            _trayPopup.IsOpen = false;
+            _trayPopup.Placement = PlacementMode.MousePoint;
+            _trayPopup.IsOpen = true;
+        }
+
+        private void CloseTrayPopup()
+        {
+            if (_trayPopup != null)
+                _trayPopup.IsOpen = false;
         }
 
         private void UpdateTrayMenuState()
@@ -329,11 +384,8 @@ namespace LiveCaptionsTranslator
         {
             _exiting = true;
 
-            if (_trayMenu != null)
-            {
-                _trayMenu.IsOpen = false;
-                _trayMenu = null;
-            }
+            CloseTrayPopup();
+            _trayPopup = null;
 
             _trayIcon?.Dispose();
             _trayIcon = null;
