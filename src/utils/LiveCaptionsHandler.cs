@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Windows.Automation;
 
 using LiveCaptionsTranslator.apis;
@@ -13,34 +13,56 @@ namespace LiveCaptionsTranslator.utils
 
         public static AutomationElement LaunchLiveCaptions()
         {
-            // Init
             KillAllProcessesByPName(PROCESS_NAME);
-            var process = Process.Start(PROCESS_NAME);
+            ResetCaptionCache();
 
-            // Search for window
-            AutomationElement? window = null;
-            for (int attemptCount = 0;
-                 window == null || window.Current.ClassName.CompareTo("LiveCaptionsDesktopWindow") != 0;
-                 attemptCount++)
+            var process = Process.Start(PROCESS_NAME)
+                ?? throw new Exception("Failed to start LiveCaptions process!");
+
+            // The original implementation continuously scanned UI Automation with no
+            // delay while waiting for the window. A short sleep removes that startup
+            // CPU spike without adding meaningful perceived latency.
+            for (int attemptCount = 0; attemptCount < 1500; attemptCount++)
             {
-                window = FindWindowByPId(process.Id);
-                if (attemptCount > 10000)
-                    throw new Exception("Failed to launch LiveCaptions!");
+                var window = FindWindowByPId(process.Id);
+                if (window != null)
+                {
+                    try
+                    {
+                        if (window.Current.ClassName.CompareTo("LiveCaptionsDesktopWindow") == 0)
+                            return window;
+                    }
+                    catch (ElementNotAvailableException)
+                    {
+                    }
+                }
+
+                Thread.Sleep(10);
             }
 
-            return window;
+            throw new Exception("Failed to launch LiveCaptions!");
         }
 
         public static void KillLiveCaptions(AutomationElement window)
         {
-            // Search for process
-            nint hWnd = new nint((long)window.Current.NativeWindowHandle);
-            WindowsAPI.GetWindowThreadProcessId(hWnd, out int processId);
-            var process = Process.GetProcessById(processId);
+            try
+            {
+                nint hWnd = new nint((long)window.Current.NativeWindowHandle);
+                WindowsAPI.GetWindowThreadProcessId(hWnd, out int processId);
+                var process = Process.GetProcessById(processId);
 
-            // Kill process
-            process.Kill();
-            process.WaitForExit();
+                process.Kill();
+                process.WaitForExit();
+            }
+            finally
+            {
+                ResetCaptionCache();
+            }
+        }
+
+        public static void ResetCaptionCache()
+        {
+            captionsTextBlock = null;
         }
 
         public static void HideLiveCaptions(AutomationElement window)
@@ -96,7 +118,7 @@ namespace LiveCaptionsTranslator.utils
             }
         }
 
-        private static AutomationElement FindWindowByPId(int processId)
+        private static AutomationElement? FindWindowByPId(int processId)
         {
             var condition = new PropertyCondition(AutomationElement.ProcessIdProperty, processId);
             return AutomationElement.RootElement.FindFirst(TreeScope.Children, condition);
@@ -164,8 +186,15 @@ namespace LiveCaptionsTranslator.utils
                 return;
             foreach (Process process in processes)
             {
-                process.Kill();
-                process.WaitForExit();
+                try
+                {
+                    process.Kill();
+                    process.WaitForExit();
+                }
+                catch (InvalidOperationException)
+                {
+                    // Process exited between enumeration and Kill().
+                }
             }
         }
     }
