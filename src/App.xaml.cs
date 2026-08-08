@@ -62,15 +62,13 @@ namespace LiveCaptionsTranslator
         {
             try
             {
-                // Use the original Fluent System Icons already bundled by WPF-UI.
-                // White foreground is deliberate: these are the dark-mode tray variants.
+                // Original WPF-UI Fluent System Icons, rendered white for dark taskbars.
                 _trayEnabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaption24);
                 _trayDisabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaptionOff24);
             }
             catch
             {
-                // Never let icon rendering kill the tray process. The fallback still uses
-                // a white caption glyph style rather than the EXE application icon.
+                // Do not fall back to the EXE icon. Keep a white caption-style symbol instead.
                 _trayEnabledIcon = CreateFallbackCaptionIcon(false);
                 _trayDisabledIcon = CreateFallbackCaptionIcon(true);
             }
@@ -94,8 +92,7 @@ namespace LiveCaptionsTranslator
             }
             catch
             {
-                // Final safety net: if NotifyIcon construction itself ever fails,
-                // keep the main program alive and surface the settings window.
+                // If NotifyIcon itself fails, keep the program usable instead of silently exiting.
                 _mainWindow?.Show();
                 _mainWindow?.Activate();
             }
@@ -162,12 +159,22 @@ namespace LiveCaptionsTranslator
                     LineJoin = Drawing2D.LineJoin.Round
                 };
 
-                var box = new Drawing.RectangleF(4.5f, 7.5f, 23f, 17f);
-                graphics.DrawRoundedRectangle(pen, box, 4f);
+                var rect = new Drawing.RectangleF(4.5f, 7.5f, 23f, 17f);
+                using (var path = new Drawing2D.GraphicsPath())
+                {
+                    const float radius = 4f;
+                    const float d = radius * 2f;
+                    path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+                    path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+                    path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+                    path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+                    path.CloseFigure();
+                    graphics.DrawPath(pen, path);
+                }
 
                 using var font = new Drawing.Font("Segoe UI", 8.7f, Drawing.FontStyle.Bold, Drawing.GraphicsUnit.Pixel);
                 using var brush = new Drawing.SolidBrush(Drawing.Color.White);
-                var format = new Drawing.StringFormat
+                using var format = new Drawing.StringFormat
                 {
                     Alignment = Drawing.StringAlignment.Center,
                     LineAlignment = Drawing.StringAlignment.Center
@@ -408,21 +415,6 @@ namespace LiveCaptionsTranslator
                 using var pen = new Drawing.Pen(Drawing.Color.FromArgb(82, 82, 82), 1f);
                 using var path = CreateRoundedRectanglePath(rect, 7);
                 e.Graphics.DrawPath(pen, path);
-            }
-        }
-
-        private static class DrawingExtensions
-        {
-            public static void DrawRoundedRectangle(this Drawing.Graphics graphics, Drawing.Pen pen, Drawing.RectangleF rect, float radius)
-            {
-                using var path = new Drawing2D.GraphicsPath();
-                float d = radius * 2;
-                path.AddArc(rect.X, rect.Y, d, d, 180, 90);
-                path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
-                path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
-                path.CloseFigure();
-                graphics.DrawPath(pen, path);
             }
         }
 
