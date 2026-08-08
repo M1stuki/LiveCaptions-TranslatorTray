@@ -201,7 +201,7 @@ namespace LiveCaptionsTranslator
                 Renderer = new DarkTrayMenuRenderer(),
                 ShowImageMargin = false,
                 ShowCheckMargin = true,
-                Padding = new Forms.Padding(2),
+                Padding = new Forms.Padding(2, 3, 2, 3),
                 DropShadowEnabled = true,
                 AutoSize = true
             };
@@ -235,11 +235,11 @@ namespace LiveCaptionsTranslator
             return new Forms.ToolStripMenuItem(text)
             {
                 AutoSize = false,
-                Size = new Drawing.Size(116, 22),
+                Size = new Drawing.Size(116, 26),
                 ForeColor = Drawing.Color.FromArgb(245, 245, 245),
                 BackColor = Drawing.Color.Transparent,
                 Padding = new Forms.Padding(2, 0, 4, 0),
-                Margin = new Forms.Padding(0)
+                Margin = new Forms.Padding(0, 1, 0, 1)
             };
         }
 
