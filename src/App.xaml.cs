@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using Forms = System.Windows.Forms;
 using Drawing = System.Drawing;
 using Drawing2D = System.Drawing.Drawing2D;
@@ -21,8 +19,8 @@ namespace LiveCaptionsTranslator
         private Forms.NotifyIcon? _trayIcon;
         private Drawing.Icon? _trayEnabledIcon;
         private Drawing.Icon? _trayDisabledIcon;
-        private Popup? _trayPopup;
-        private SymbolIcon? _enableCheckIcon;
+        private Forms.ContextMenuStrip? _trayMenu;
+        private Forms.ToolStripMenuItem? _enableMenuItem;
         private MainWindow? _mainWindow;
         private bool _translationEnabled;
         private bool _exiting;
@@ -74,24 +72,21 @@ namespace LiveCaptionsTranslator
 
             try
             {
-                _trayPopup = BuildTrayPopup();
+                _trayMenu = BuildTrayMenu();
                 _trayIcon = new Forms.NotifyIcon
                 {
                     Visible = true,
                     Icon = _trayDisabledIcon,
-                    Text = "字幕已关闭，点击开启字幕"
+                    Text = "字幕已关闭，点击开启字幕",
+                    ContextMenuStrip = _trayMenu
                 };
 
+                // Let NotifyIcon/ContextMenuStrip handle right-click natively. This gives the
+                // expected outside-click dismissal and keeps the menu inside the work area.
                 _trayIcon.MouseUp += (_, args) =>
                 {
                     if (args.Button == Forms.MouseButtons.Left)
-                    {
                         Dispatcher.BeginInvoke(ToggleTranslation);
-                    }
-                    else if (args.Button == Forms.MouseButtons.Right)
-                    {
-                        Dispatcher.BeginInvoke(ShowTrayMenu);
-                    }
                 };
             }
             catch
@@ -208,136 +203,79 @@ namespace LiveCaptionsTranslator
             }
         }
 
-        private Popup BuildTrayPopup()
+        private Forms.ContextMenuStrip BuildTrayMenu()
         {
-            var itemStyle = (Style)FindResource("TrayPopupItemStyle");
-
-            var panel = new StackPanel
+            var menu = new Forms.ContextMenuStrip
             {
-                Width = 116
+                BackColor = Drawing.Color.FromArgb(44, 44, 44),
+                ForeColor = Drawing.Color.FromArgb(245, 245, 245),
+                Font = new Drawing.Font("Microsoft YaHei", 8.25f, Drawing.FontStyle.Regular, Drawing.GraphicsUnit.Point),
+                Renderer = new DarkTrayMenuRenderer(),
+                ShowImageMargin = false,
+                ShowCheckMargin = true,
+                Padding = new Forms.Padding(2),
+                DropShadowEnabled = true,
+                AutoSize = true
             };
 
-            _enableCheckIcon = new SymbolIcon(SymbolRegular.Checkmark20, 11)
+            menu.HandleCreated += (_, _) => ApplyModernMenuWindowStyle(menu.Handle);
+
+            _enableMenuItem = CreateTrayMenuItem("启用字幕");
+            _enableMenuItem.Click += (_, _) => ToggleTranslation();
+
+            var settingsItem = CreateTrayMenuItem("设置");
+            settingsItem.Click += (_, _) => ShowSettings();
+
+            var exitItem = CreateTrayMenuItem("退出");
+            exitItem.Click += (_, _) => ExitApplication();
+
+            menu.Items.Add(_enableMenuItem);
+            menu.Items.Add(settingsItem);
+            menu.Items.Add(exitItem);
+
+            menu.Opening += (_, _) =>
             {
-                Visibility = Visibility.Hidden,
-                Foreground = Media.Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                if (_enableMenuItem != null)
+                    _enableMenuItem.Checked = _translationEnabled;
             };
 
-            var enableItem = CreateTrayPopupItem("启用字幕", _enableCheckIcon, itemStyle);
-            enableItem.Click += (_, _) =>
-            {
-                CloseTrayPopup();
-                ToggleTranslation();
-            };
+            return menu;
+        }
 
-            var settingsItem = CreateTrayPopupItem("设置", CreateEmptyMenuIcon(), itemStyle);
-            settingsItem.Click += (_, _) =>
+        private static Forms.ToolStripMenuItem CreateTrayMenuItem(string text)
+        {
+            return new Forms.ToolStripMenuItem(text)
             {
-                CloseTrayPopup();
-                ShowSettings();
-            };
-
-            var exitItem = CreateTrayPopupItem("退出", CreateEmptyMenuIcon(), itemStyle);
-            exitItem.Click += (_, _) =>
-            {
-                CloseTrayPopup();
-                ExitApplication();
-            };
-
-            panel.Children.Add(enableItem);
-            panel.Children.Add(settingsItem);
-            panel.Children.Add(exitItem);
-
-            var popupBorder = new Border
-            {
-                Background = new Media.SolidColorBrush(Media.Color.FromRgb(44, 44, 44)),
-                BorderBrush = new Media.SolidColorBrush(Media.Color.FromRgb(71, 71, 71)),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(3),
-                Child = panel,
-                SnapsToDevicePixels = true
-            };
-
-            return new Popup
-            {
-                AllowsTransparency = true,
-                StaysOpen = false,
-                Placement = PlacementMode.MousePoint,
-                Child = popupBorder
+                AutoSize = false,
+                Size = new Drawing.Size(116, 22),
+                ForeColor = Drawing.Color.FromArgb(245, 245, 245),
+                BackColor = Drawing.Color.Transparent,
+                Padding = new Forms.Padding(2, 0, 4, 0),
+                Margin = new Forms.Padding(0)
             };
         }
 
-        private static System.Windows.Controls.Button CreateTrayPopupItem(string text, FrameworkElement icon, Style style)
+        private static void ApplyModernMenuWindowStyle(IntPtr handle)
         {
-            var grid = new Grid
+            try
             {
-                Height = 22
-            };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(18) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                int dark = 1;
+                NativeMethods.DwmSetWindowAttribute(handle, 20, ref dark, sizeof(int));
 
-            icon.Width = 12;
-            icon.Height = 12;
-            icon.HorizontalAlignment = HorizontalAlignment.Center;
-            icon.VerticalAlignment = VerticalAlignment.Center;
-            Grid.SetColumn(icon, 0);
-
-            var label = new System.Windows.Controls.TextBlock
+                // DWMWCP_ROUND = 2 on Windows 11.
+                int corners = 2;
+                NativeMethods.DwmSetWindowAttribute(handle, 33, ref corners, sizeof(int));
+            }
+            catch
             {
-                Text = text,
-                FontFamily = new Media.FontFamily("Microsoft YaHei"),
-                FontSize = 11.0,
-                FontWeight = FontWeights.Normal,
-                Foreground = new Media.SolidColorBrush(Media.Color.FromRgb(245, 245, 245)),
-                Margin = new Thickness(3, 0, 7, 0),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            Grid.SetColumn(label, 1);
-
-            grid.Children.Add(icon);
-            grid.Children.Add(label);
-
-            return new System.Windows.Controls.Button
-            {
-                Style = style,
-                Content = grid
-            };
-        }
-
-        private static FrameworkElement CreateEmptyMenuIcon()
-        {
-            return new Border
-            {
-                Width = 12,
-                Height = 12,
-                Background = Media.Brushes.Transparent
-            };
-        }
-
-        private void ShowTrayMenu()
-        {
-            if (_trayPopup == null)
-                return;
-
-            UpdateTrayMenuState();
-            _trayPopup.IsOpen = false;
-            _trayPopup.Placement = PlacementMode.MousePoint;
-            _trayPopup.IsOpen = true;
-        }
-
-        private void CloseTrayPopup()
-        {
-            if (_trayPopup != null)
-                _trayPopup.IsOpen = false;
+                // Rendering remains dark even if DWM attributes are unavailable.
+            }
         }
 
         private void UpdateTrayMenuState()
         {
-            if (_enableCheckIcon != null)
-                _enableCheckIcon.Visibility = _translationEnabled ? Visibility.Visible : Visibility.Hidden;
+            if (_enableMenuItem != null)
+                _enableMenuItem.Checked = _translationEnabled;
         }
 
         private void ToggleTranslation()
@@ -384,8 +322,12 @@ namespace LiveCaptionsTranslator
         {
             _exiting = true;
 
-            CloseTrayPopup();
-            _trayPopup = null;
+            if (_trayIcon != null)
+                _trayIcon.ContextMenuStrip = null;
+
+            _trayMenu?.Dispose();
+            _trayMenu = null;
+            _enableMenuItem = null;
 
             _trayIcon?.Dispose();
             _trayIcon = null;
@@ -405,11 +347,94 @@ namespace LiveCaptionsTranslator
             }
         }
 
+        private sealed class DarkTrayMenuRenderer : Forms.ToolStripProfessionalRenderer
+        {
+            public DarkTrayMenuRenderer() : base(new DarkTrayColorTable())
+            {
+                RoundedEdges = false;
+            }
+
+            protected override void OnRenderMenuItemBackground(Forms.ToolStripItemRenderEventArgs e)
+            {
+                var rect = new Drawing.Rectangle(2, 1, e.Item.Width - 4, e.Item.Height - 2);
+                var color = e.Item.Selected
+                    ? Drawing.Color.FromArgb(58, 58, 58)
+                    : Drawing.Color.FromArgb(44, 44, 44);
+
+                using var brush = new Drawing.SolidBrush(color);
+                using var path = CreateRoundedRectangle(rect, 4);
+                e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+                e.Graphics.FillPath(brush, path);
+                e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.Default;
+            }
+
+            protected override void OnRenderItemCheck(Forms.ToolStripItemImageRenderEventArgs e)
+            {
+                if (e.Item is not Forms.ToolStripMenuItem item || !item.Checked)
+                    return;
+
+                var bounds = e.ImageRectangle;
+                int cx = bounds.Left + bounds.Width / 2;
+                int cy = bounds.Top + bounds.Height / 2;
+                using var pen = new Drawing.Pen(Drawing.Color.White, 1.5f)
+                {
+                    StartCap = Drawing2D.LineCap.Round,
+                    EndCap = Drawing2D.LineCap.Round,
+                    LineJoin = Drawing2D.LineJoin.Round
+                };
+                e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias;
+                e.Graphics.DrawLines(pen, new[]
+                {
+                    new Drawing.Point(cx - 4, cy),
+                    new Drawing.Point(cx - 1, cy + 3),
+                    new Drawing.Point(cx + 5, cy - 4)
+                });
+                e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.Default;
+            }
+
+            private static Drawing2D.GraphicsPath CreateRoundedRectangle(Drawing.Rectangle rect, int radius)
+            {
+                int diameter = radius * 2;
+                var path = new Drawing2D.GraphicsPath();
+                path.AddArc(rect.Left, rect.Top, diameter, diameter, 180, 90);
+                path.AddArc(rect.Right - diameter, rect.Top, diameter, diameter, 270, 90);
+                path.AddArc(rect.Right - diameter, rect.Bottom - diameter, diameter, diameter, 0, 90);
+                path.AddArc(rect.Left, rect.Bottom - diameter, diameter, diameter, 90, 90);
+                path.CloseFigure();
+                return path;
+            }
+        }
+
+        private sealed class DarkTrayColorTable : Forms.ProfessionalColorTable
+        {
+            private static readonly Drawing.Color Background = Drawing.Color.FromArgb(44, 44, 44);
+            private static readonly Drawing.Color Selected = Drawing.Color.FromArgb(58, 58, 58);
+            private static readonly Drawing.Color Border = Drawing.Color.FromArgb(71, 71, 71);
+
+            public override Drawing.Color ToolStripDropDownBackground => Background;
+            public override Drawing.Color ImageMarginGradientBegin => Background;
+            public override Drawing.Color ImageMarginGradientMiddle => Background;
+            public override Drawing.Color ImageMarginGradientEnd => Background;
+            public override Drawing.Color MenuBorder => Border;
+            public override Drawing.Color MenuItemBorder => Selected;
+            public override Drawing.Color MenuItemSelected => Selected;
+            public override Drawing.Color MenuItemSelectedGradientBegin => Selected;
+            public override Drawing.Color MenuItemSelectedGradientEnd => Selected;
+            public override Drawing.Color MenuItemPressedGradientBegin => Selected;
+            public override Drawing.Color MenuItemPressedGradientMiddle => Selected;
+            public override Drawing.Color MenuItemPressedGradientEnd => Selected;
+            public override Drawing.Color SeparatorDark => Border;
+            public override Drawing.Color SeparatorLight => Border;
+        }
+
         private static class NativeMethods
         {
             [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
             [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
             public static extern bool DestroyIcon(IntPtr hIcon);
+
+            [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+            public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int valueSize);
         }
     }
 }
