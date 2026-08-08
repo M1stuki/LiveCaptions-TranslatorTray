@@ -4,6 +4,7 @@ using System.Windows;
 using Forms = System.Windows.Forms;
 
 using LiveCaptionsTranslator.utils;
+using LiveCaptionsTranslator.Utils;
 
 namespace LiveCaptionsTranslator
 {
@@ -19,7 +20,7 @@ namespace LiveCaptionsTranslator
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             Translator.Setting?.Save();
 
-            // Start disabled: no API calls until the user left-clicks the tray icon.
+            // Start disabled: no translation API calls until the tray icon is enabled.
             Translator.LogOnlyFlag = true;
 
             Task.Run(() => Translator.SyncLoop());
@@ -31,11 +32,22 @@ namespace LiveCaptionsTranslator
         {
             base.OnStartup(e);
 
+            EventManager.RegisterClassHandler(
+                typeof(FrameworkElement),
+                FrameworkElement.LoadedEvent,
+                new RoutedEventHandler(OnFrameworkElementLoaded));
+
             _mainWindow = new MainWindow();
             MainWindow = _mainWindow;
             _mainWindow.Closing += MainWindow_Closing;
 
             InitializeTrayIcon();
+        }
+
+        private static void OnFrameworkElementLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element)
+                ChineseUiLocalizer.ApplyElement(element);
         }
 
         private void InitializeTrayIcon()
@@ -48,7 +60,7 @@ namespace LiveCaptionsTranslator
             }
             catch
             {
-                // Ignore and fall back to the system application icon below.
+                // Ignore and fall back to a system icon below.
             }
 
             _trayIcon = new Forms.NotifyIcon
