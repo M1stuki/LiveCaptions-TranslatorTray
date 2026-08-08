@@ -27,6 +27,7 @@ namespace LiveCaptionsTranslator
                 IsAutoHeight = true;
                 CheckForFirstUse();
                 CheckForUpdates();
+                ChineseUiLocalizer.Apply(this);
             };
 
             double screenWidth = SystemParameters.PrimaryScreenWidth;
@@ -46,6 +47,20 @@ namespace LiveCaptionsTranslator
             ShowLogCard(Translator.Setting.MainWindow.CaptionLogEnabled);
         }
 
+        public void ShowSettingsPage()
+        {
+            RootNavigation.Navigate(typeof(SettingPage));
+            Dispatcher.BeginInvoke(() => ChineseUiLocalizer.Apply(this));
+        }
+
+        public void SetOverlayEnabled(bool enabled)
+        {
+            if (enabled && OverlayWindow == null)
+                OpenOverlay();
+            else if (!enabled && OverlayWindow != null)
+                CloseOverlay();
+        }
+
         private void TopmostButton_Click(object sender, RoutedEventArgs e)
         {
             ToggleTopmost(!this.Topmost);
@@ -53,54 +68,67 @@ namespace LiveCaptionsTranslator
 
         private void OverlayModeButton_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Button;
-            var symbolIcon = button?.Icon as SymbolIcon;
+            SetOverlayEnabled(OverlayWindow == null);
+        }
 
-            if (OverlayWindow == null)
+        private void OpenOverlay()
+        {
+            if (OverlayWindow != null)
+                return;
+
+            if (OverlayModeButton.Icon is SymbolIcon symbolIcon)
             {
                 symbolIcon.Symbol = SymbolRegular.ClosedCaption24;
                 symbolIcon.Filled = true;
+            }
 
-                OverlayWindow = new OverlayWindow();
-                OverlayWindow.SizeChanged +=
-                    (s, e) => WindowHandler.SaveState(OverlayWindow, Translator.Setting);
-                OverlayWindow.LocationChanged +=
-                    (s, e) => WindowHandler.SaveState(OverlayWindow, Translator.Setting);
+            OverlayWindow = new OverlayWindow();
+            OverlayWindow.SizeChanged +=
+                (s, e) => WindowHandler.SaveState(OverlayWindow, Translator.Setting);
+            OverlayWindow.LocationChanged +=
+                (s, e) => WindowHandler.SaveState(OverlayWindow, Translator.Setting);
 
-                double screenWidth = SystemParameters.PrimaryScreenWidth;
-                double screenHeight = SystemParameters.PrimaryScreenHeight;
+            double screenWidth = SystemParameters.PrimaryScreenWidth;
+            double screenHeight = SystemParameters.PrimaryScreenHeight;
 
-                var windowState = WindowHandler.LoadState(OverlayWindow, Translator.Setting);
-                if (windowState.Left <= 0 || windowState.Left >= screenWidth ||
-                    windowState.Top <= 0 || windowState.Top >= screenHeight)
-                {
-                    WindowHandler.RestoreState(OverlayWindow, new Rect(
-                        (screenWidth - 650) / 2, screenHeight * 5 / 6 - 135, 650, 135));
-                }
-                else
-                    WindowHandler.RestoreState(OverlayWindow, windowState);
-
-                OverlayWindow.Show();
+            var windowState = WindowHandler.LoadState(OverlayWindow, Translator.Setting);
+            if (windowState.Left <= 0 || windowState.Left >= screenWidth ||
+                windowState.Top <= 0 || windowState.Top >= screenHeight)
+            {
+                WindowHandler.RestoreState(OverlayWindow, new Rect(
+                    (screenWidth - 650) / 2, screenHeight * 5 / 6 - 135, 650, 135));
             }
             else
+                WindowHandler.RestoreState(OverlayWindow, windowState);
+
+            OverlayWindow.Show();
+            ChineseUiLocalizer.Apply(OverlayWindow);
+        }
+
+        private void CloseOverlay()
+        {
+            if (OverlayWindow == null)
+                return;
+
+            if (OverlayModeButton.Icon is SymbolIcon symbolIcon)
             {
                 symbolIcon.Symbol = SymbolRegular.ClosedCaptionOff24;
                 symbolIcon.Filled = false;
-
-                switch (OverlayWindow.OnlyMode)
-                {
-                    case CaptionVisible.TranslationOnly:
-                        OverlayWindow.OnlyMode = CaptionVisible.SubtitleOnly;
-                        OverlayWindow.OnlyMode = CaptionVisible.Both;
-                        break;
-                    case CaptionVisible.SubtitleOnly:
-                        OverlayWindow.OnlyMode = CaptionVisible.Both;
-                        break;
-                }
-
-                OverlayWindow.Close();
-                OverlayWindow = null;
             }
+
+            switch (OverlayWindow.OnlyMode)
+            {
+                case CaptionVisible.TranslationOnly:
+                    OverlayWindow.OnlyMode = CaptionVisible.SubtitleOnly;
+                    OverlayWindow.OnlyMode = CaptionVisible.Both;
+                    break;
+                case CaptionVisible.SubtitleOnly:
+                    OverlayWindow.OnlyMode = CaptionVisible.Both;
+                    break;
+            }
+
+            OverlayWindow.Close();
+            OverlayWindow = null;
         }
 
         private void LogOnlyButton_Click(object sender, RoutedEventArgs e)
@@ -165,6 +193,7 @@ namespace LiveCaptionsTranslator
                     Owner = this
                 };
                 welcomeWindow.Show();
+                ChineseUiLocalizer.Apply(welcomeWindow);
             }, System.Windows.Threading.DispatcherPriority.Background);
         }
 
@@ -180,7 +209,7 @@ namespace LiveCaptionsTranslator
             }
             catch (Exception ex)
             {
-                SnackbarHost.Show("[ERROR] Update Check Failed.", ex.Message, SnackbarType.Error,
+                SnackbarHost.Show("[错误] 检查更新失败", ex.Message, SnackbarType.Error,
                     timeout: 2, closeButton: true);
 
                 return;
@@ -194,12 +223,12 @@ namespace LiveCaptionsTranslator
             {
                 var dialog = new Wpf.Ui.Controls.MessageBox
                 {
-                    Title = "New Version Available",
-                    Content = $"A new version has been detected: {latestVersion}\n" +
-                              $"Current version: {currentVersion}\n" +
-                              $"Please visit GitHub to download the latest release.",
-                    PrimaryButtonText = "Update",
-                    CloseButtonText = "Ignore this version"
+                    Title = "发现新版本",
+                    Content = $"检测到新版本：{latestVersion}\n" +
+                              $"当前版本：{currentVersion}\n" +
+                              $"请前往 GitHub 下载最新版本。",
+                    PrimaryButtonText = "更新",
+                    CloseButtonText = "忽略此版本"
                 };
                 var result = await dialog.ShowDialogAsync();
 
@@ -216,7 +245,7 @@ namespace LiveCaptionsTranslator
                     }
                     catch (Exception ex)
                     {
-                        SnackbarHost.Show("[ERROR] Open Browser Failed.", ex.Message, SnackbarType.Error,
+                        SnackbarHost.Show("[错误] 打开浏览器失败", ex.Message, SnackbarType.Error,
                             timeout: 2, closeButton: true);
                     }
                 }
