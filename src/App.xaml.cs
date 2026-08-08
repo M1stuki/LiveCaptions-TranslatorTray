@@ -270,7 +270,7 @@ namespace LiveCaptionsTranslator
             };
         }
 
-        private static Button CreateTrayPopupItem(string text, FrameworkElement icon, Style style)
+        private static System.Windows.Controls.Button CreateTrayPopupItem(string text, FrameworkElement icon, Style style)
         {
             var grid = new Grid
             {
@@ -300,7 +300,7 @@ namespace LiveCaptionsTranslator
             grid.Children.Add(icon);
             grid.Children.Add(label);
 
-            return new Button
+            return new System.Windows.Controls.Button
             {
                 Style = style,
                 Content = grid
