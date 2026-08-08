@@ -5,6 +5,7 @@ using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
 using LiveCaptionsTranslator.utils;
+using LiveCaptionsTranslator.Utils;
 using Button = Wpf.Ui.Controls.Button;
 
 namespace LiveCaptionsTranslator
