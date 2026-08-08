@@ -6,7 +6,6 @@ using Wpf.Ui.Appearance;
 
 using LiveCaptionsTranslator.models;
 using LiveCaptionsTranslator.utils;
-using LiveCaptionsTranslator.Utils;
 using Wpf.Ui.Controls;
 
 namespace LiveCaptionsTranslator
@@ -20,13 +19,11 @@ namespace LiveCaptionsTranslator
             InitializeComponent();
             ApplicationThemeManager.ApplySystemTheme();
             DataContext = Translator.Setting;
-            ChineseUiLocalizer.Apply(this);
 
             Loaded += (s, e) =>
             {
                 (App.Current.MainWindow as MainWindow)?.AutoHeightAdjust(maxHeight: (int)App.Current.MainWindow.MinHeight);
                 CheckForFirstUse();
-                ChineseUiLocalizer.Apply(this);
             };
 
             TranslateAPIBox.ItemsSource = Translator.Setting?.Configs.Keys;
@@ -71,13 +68,26 @@ namespace LiveCaptionsTranslator
 
         private void APISettingButton_click(object sender, RoutedEventArgs e)
         {
-            if (SettingWindow != null && SettingWindow.IsLoaded)
-                SettingWindow.Activate();
-            else
+            try
             {
+                if (SettingWindow != null && SettingWindow.IsLoaded)
+                {
+                    SettingWindow.Activate();
+                    return;
+                }
+
                 SettingWindow = new SettingWindow();
-                SettingWindow.Closed += (sender, args) => SettingWindow = null;
+                SettingWindow.Closed += (_, _) => SettingWindow = null;
                 SettingWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                SettingWindow = null;
+                System.Windows.MessageBox.Show(
+                    $"无法打开 API 设置。\n\n{ex.Message}",
+                    "API 设置",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
