@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using Forms = System.Windows.Forms;
@@ -24,8 +24,10 @@ namespace LiveCaptionsTranslator
         private Drawing.Icon? _trayDisabledIcon;
         private WpfContextMenu? _trayMenu;
         private WpfMenuItem? _enableMenuItem;
+        private System.Windows.Interop.HwndSource? _trayMenuOwner;
         private MainWindow? _mainWindow;
         private bool _translationEnabled;
+        private bool _translationToggleBusy;
         private bool _exiting;
 
         public App()
@@ -64,6 +66,7 @@ namespace LiveCaptionsTranslator
 
             try
             {
+                EnsureTrayMenuOwner();
                 _trayMenu = BuildTrayMenu();
                 _trayIcon = new Forms.NotifyIcon
                 {
@@ -72,8 +75,6 @@ namespace LiveCaptionsTranslator
                     Text = "字幕已关闭，点击开启字幕"
                 };
 
-                // Keep the reliable native shell icon/event path, but display a real WPF-UI
-                // ContextMenu instead of the old WinForms ContextMenuStrip.
                 _trayIcon.MouseUp += (_, args) =>
                 {
                     if (args.Button == Forms.MouseButtons.Left)
@@ -91,6 +92,27 @@ namespace LiveCaptionsTranslator
                 _mainWindow?.Show();
                 _mainWindow?.Activate();
             }
+        }
+
+        private void EnsureTrayMenuOwner()
+        {
+            if (_trayMenuOwner != null || _mainWindow == null)
+                return;
+
+            // WPF-UI's own tray implementation uses a tiny hidden HWND as the shell/menu
+            // message owner, then foregrounds that HWND before opening the ContextMenu.
+            // Reproduce that behavior while keeping the existing reliable WinForms NotifyIcon.
+            var parentHandle = new System.Windows.Interop.WindowInteropHelper(_mainWindow).EnsureHandle();
+            _trayMenuOwner = new System.Windows.Interop.HwndSource(
+                0x0,
+                0x04000000,
+                0x00080000 | 0x00000020 | 0x00000008 | 0x08000000,
+                0,
+                0,
+                0,
+                0,
+                "LiveCaptionsTranslator_TrayMenuOwner",
+                parentHandle);
         }
 
         private static Drawing.Icon CreateFluentTrayIcon(SymbolRegular symbol, bool filled)
@@ -202,8 +224,6 @@ namespace LiveCaptionsTranslator
 
         private WpfContextMenu BuildTrayMenu()
         {
-            // Size target: only a small step above the earlier 10.5-DIP / 22-DIP popup,
-            // while keeping the WPF-UI rounded Fluent shell.
             var menu = new WpfContextMenu
             {
                 FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
@@ -214,7 +234,6 @@ namespace LiveCaptionsTranslator
 
             ApplyDarkTrayMenuPalette(menu);
 
-            // No checkbox column: this item describes the action that will happen next.
             _enableMenuItem = CreateTrayMenuItem("开启字幕");
             _enableMenuItem.Click += (_, _) => ToggleTranslation();
 
@@ -234,8 +253,6 @@ namespace LiveCaptionsTranslator
 
         private static void ApplyDarkTrayMenuPalette(WpfContextMenu menu)
         {
-            // ContextMenu is rendered in its own Popup visual tree. Explicitly seed the
-            // WPF-UI resources here so it stays dark even when Windows itself is in light mode.
             var background = new Media.SolidColorBrush(Media.Color.FromRgb(44, 44, 44));
             var foreground = new Media.SolidColorBrush(Media.Color.FromRgb(245, 245, 245));
             var border = new Media.SolidColorBrush(Media.Color.FromArgb(0x33, 0, 0, 0));
@@ -268,51 +285,99 @@ namespace LiveCaptionsTranslator
 
         private void ShowTrayMenu()
         {
-            if (_trayMenu == null || _mainWindow == null)
+            if (_trayMenu == null)
+                return;
+
+            EnsureTrayMenuOwner();
+            if (_trayMenuOwner == null)
                 return;
 
             UpdateTrayMenuState();
 
-            // Use the WPF window HWND as the popup owner/foreground window. WPF context menus
-            // rely on this relationship for normal mouse capture, so clicking another window,
-            // the desktop, or the taskbar dismisses the menu just like a native tray menu.
-            var helper = new System.Windows.Interop.WindowInteropHelper(_mainWindow);
-            var ownerHandle = helper.EnsureHandle();
-            _ = NativeMethods.SetForegroundWindow(ownerHandle);
-
-            _trayMenu.Placement = PlacementMode.MousePoint;
-            _trayMenu.PlacementTarget = _mainWindow;
             if (_trayMenu.IsOpen)
                 _trayMenu.IsOpen = false;
 
+            // This mirrors WPF-UI.Tray's OpenMenu(): foreground the dedicated tray HWND,
+            // use MousePoint placement, and do not bind the popup to the hidden main window.
+            _ = NativeMethods.SetForegroundWindow(_trayMenuOwner.Handle);
+            System.Windows.Controls.ContextMenuService.SetPlacement(_trayMenu, PlacementMode.MousePoint);
+            _trayMenu.PlacementTarget = null;
             _trayMenu.IsOpen = true;
-            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, () => _trayMenu?.Focus());
         }
 
         private void UpdateTrayMenuState()
         {
             if (_enableMenuItem != null)
-                _enableMenuItem.Header = _translationEnabled ? "关闭字幕" : "开启字幕";
+            {
+                _enableMenuItem.Header = _translationToggleBusy
+                    ? "正在切换…"
+                    : (_translationEnabled ? "关闭字幕" : "开启字幕");
+            }
         }
 
-        private void ToggleTranslation()
+        private async void ToggleTranslation()
         {
-            _translationEnabled = !_translationEnabled;
-            Translator.LogOnlyFlag = !_translationEnabled;
-            Translator.ClearContexts();
+            if (_translationToggleBusy)
+                return;
 
-            if (_mainWindow != null)
-                _mainWindow.SetOverlayEnabled(_translationEnabled);
-
+            _translationToggleBusy = true;
             UpdateTrayMenuState();
 
-            if (_trayIcon != null)
+            try
             {
-                _trayIcon.Icon = _translationEnabled ? _trayEnabledIcon : _trayDisabledIcon;
-                _trayIcon.Text = _translationEnabled
-                    ? "字幕已开启，点击关闭字幕"
-                    : "字幕已关闭，点击开启字幕";
+                if (_translationEnabled)
+                {
+                    _translationEnabled = false;
+                    Translator.LogOnlyFlag = true;
+                    _mainWindow?.SetOverlayEnabled(false);
+                    await Task.Run(Translator.StopEngine);
+                }
+                else
+                {
+                    await Task.Run(Translator.StartEngine);
+                    Translator.LogOnlyFlag = false;
+                    _translationEnabled = true;
+                    Translator.ClearContexts();
+                    _mainWindow?.SetOverlayEnabled(true);
+                }
             }
+            catch (Exception ex)
+            {
+                _translationEnabled = false;
+                Translator.LogOnlyFlag = true;
+                _mainWindow?.SetOverlayEnabled(false);
+
+                try
+                {
+                    await Task.Run(Translator.StopEngine);
+                }
+                catch
+                {
+                }
+
+                Forms.MessageBox.Show(
+                    $"无法启动字幕识别：\r\n{ex.Message}",
+                    "LiveCaptions Translator",
+                    Forms.MessageBoxButtons.OK,
+                    Forms.MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _translationToggleBusy = false;
+                UpdateTrayMenuState();
+                UpdateTrayIconState();
+            }
+        }
+
+        private void UpdateTrayIconState()
+        {
+            if (_trayIcon == null)
+                return;
+
+            _trayIcon.Icon = _translationEnabled ? _trayEnabledIcon : _trayDisabledIcon;
+            _trayIcon.Text = _translationEnabled
+                ? "字幕已开启，点击关闭字幕"
+                : "字幕已关闭，点击开启字幕";
         }
 
         private void ShowSettings()
@@ -339,6 +404,14 @@ namespace LiveCaptionsTranslator
         {
             _exiting = true;
 
+            try
+            {
+                Translator.StopEngine();
+            }
+            catch
+            {
+            }
+
             if (_trayMenu != null)
                 _trayMenu.IsOpen = false;
             _trayMenu = null;
@@ -350,15 +423,19 @@ namespace LiveCaptionsTranslator
             _trayEnabledIcon = null;
             _trayDisabledIcon?.Dispose();
             _trayDisabledIcon = null;
+            _trayMenuOwner?.Dispose();
+            _trayMenuOwner = null;
             Shutdown();
         }
 
         private static void OnProcessExit(object? sender, EventArgs e)
         {
-            if (Translator.Window != null)
+            try
             {
-                LiveCaptionsHandler.RestoreLiveCaptions(Translator.Window);
-                LiveCaptionsHandler.KillLiveCaptions(Translator.Window);
+                Translator.StopEngine();
+            }
+            catch
+            {
             }
         }
 
