@@ -24,6 +24,9 @@ namespace LiveCaptionsTranslator
             InitializeComponent();
             ApplicationThemeManager.ApplySystemTheme();
             DataContext = Translator.Setting;
+
+            // Temporary compatibility pass for the large API configuration XAML.
+            // Run it before the window is shown, never after it becomes visible.
             ChineseUiLocalizer.Apply(this);
 
             Loaded += (sender, args) =>
@@ -31,7 +34,6 @@ namespace LiveCaptionsTranslator
                 SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, true);
                 Initialize();
                 SelectButton(PromptButton);
-                ChineseUiLocalizer.Apply(this);
             };
         }
 
