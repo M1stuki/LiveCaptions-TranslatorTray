@@ -6,7 +6,7 @@
     xmlns:local="clr-namespace:LiveCaptionsTranslator"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="LiveCaptions Translator"
+    Title="实时字幕翻译"
     Width="750"
     Height="170"
     MinWidth="750"
@@ -34,7 +34,7 @@
                 Height="27"
                 ShowMaximize="False">
                 <ui:TitleBar.Header>
-                    <ui:TextBlock Padding="15,0,0,0" VerticalAlignment="Center">LiveCaptions Translator</ui:TextBlock>
+                    <ui:TextBlock Padding="15,0,0,0" VerticalAlignment="Center">实时字幕翻译</ui:TextBlock>
                 </ui:TitleBar.Header>
                 <ui:TitleBar.TrailingContent>
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
@@ -45,7 +45,7 @@
                             Click="CaptionLogButton_Click"
                             Icon="{ui:SymbolIcon History16,
                                                  Filled=False}"
-                            ToolTip="Log Cards of Captions"
+                            ToolTip="字幕历史卡片"
                             Visibility="Collapsed" />
                         <ui:Button
                             x:Name="LogOnlyButton"
@@ -54,7 +54,8 @@
                             Click="LogOnlyButton_Click"
                             Icon="{ui:SymbolIcon Pause16,
                                                  Filled=False}"
-                            ToolTip="Pause Translation (Log Only)" />
+                            ToolTip="暂停翻译"
+                            />
                         <ui:Button
                             x:Name="OverlayModeButton"
                             Margin="0,0,5,0"
@@ -62,7 +63,7 @@
                             Click="OverlayModeButton_Click"
                             Icon="{ui:SymbolIcon ClosedCaptionOff24,
                                                  Filled=False}"
-                            ToolTip="Overlay Window" />
+                            ToolTip="悬浮字幕窗口" />
                         <ui:Button
                             x:Name="TopmostButton"
                             Margin="0,0,5,0"
@@ -70,7 +71,7 @@
                             Click="TopmostButton_Click"
                             Icon="{ui:SymbolIcon Pin16,
                                                  Filled=True}"
-                            ToolTip="Always on Top" />
+                            ToolTip="始终置顶" />
                     </StackPanel>
                 </ui:TitleBar.TrailingContent>
             </ui:TitleBar>
@@ -87,29 +88,29 @@
                 <ui:NavigationView.MenuItems>
                     <ui:NavigationViewItem
                         Margin="0,6,0,3"
-                        Content="Caption"
-                        FontFamily="Bahnschrift"
+                        Content="字幕"
+                        FontFamily="Microsoft YaHei"
                         Icon="{ui:SymbolIcon Home24}"
                         NavigationCacheMode="Enabled"
                         TargetPageType="{x:Type local:CaptionPage}" />
                     <ui:NavigationViewItem
                         Margin="0,3,0,0"
-                        Content="Setting"
-                        FontFamily="Bahnschrift"
+                        Content="设置"
+                        FontFamily="Microsoft YaHei"
                         Icon="{ui:SymbolIcon Settings24}"
                         NavigationCacheMode="Required"
                         TargetPageType="{x:Type local:SettingPage}" />
                     <ui:NavigationViewItem
                         Margin="0,3,0,0"
-                        Content="History"
-                        FontFamily="Bahnschrift"
+                        Content="历史记录"
+                        FontFamily="Microsoft YaHei"
                         Icon="{ui:SymbolIcon History24}"
                         NavigationCacheMode="Disabled"
                         TargetPageType="{x:Type local:HistoryPage}" />
                     <ui:NavigationViewItem
                         Margin="0,3,0,0"
-                        Content="Info"
-                        FontFamily="Bahnschrift"
+                        Content="关于"
+                        FontFamily="Microsoft YaHei"
                         Icon="{ui:SymbolIcon Info24}"
                         NavigationCacheMode="Required"
                         TargetPageType="{x:Type local:InfoPage}" />
