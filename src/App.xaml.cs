@@ -64,8 +64,6 @@ namespace LiveCaptionsTranslator
         {
             try
             {
-                // Use the FILLED Fluent System Icons from the same WPF-UI package as the app.
-                // They remain pure white for a dark taskbar, but are visibly heavier than Regular.
                 _trayEnabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaption24, filled: true);
                 _trayDisabledIcon = CreateFluentTrayIcon(SymbolRegular.ClosedCaptionOff24, filled: true);
             }
@@ -213,41 +211,43 @@ namespace LiveCaptionsTranslator
 
         private System.Windows.Controls.ContextMenu BuildTrayMenu()
         {
-            // WPF-UI's ControlsDictionary supplies the real Fluent ContextMenu/MenuItem
-            // templates: rounded corners, shadow, modern hover states and DPI-aware rendering.
+            var menuStyle = (Style)FindResource("TrayContextMenuStyle");
+            var itemStyle = (Style)FindResource("TrayMenuItemStyle");
+
             var menu = new System.Windows.Controls.ContextMenu
             {
-                MinWidth = 185,
-                FontSize = 14,
-                FontFamily = new Media.FontFamily("Segoe UI Variable Text"),
+                Style = menuStyle,
                 Placement = PlacementMode.MousePoint,
                 StaysOpen = false
             };
 
-            _enableCheckIcon = new SymbolIcon(SymbolRegular.Checkmark20, 16)
+            _enableCheckIcon = new SymbolIcon(SymbolRegular.Checkmark20, 14)
             {
-                Visibility = Visibility.Hidden
+                Visibility = Visibility.Hidden,
+                Foreground = Media.Brushes.White
             };
 
             _enableMenuItem = new System.Windows.Controls.MenuItem
             {
                 Header = "启用字幕",
                 Icon = _enableCheckIcon,
-                FontWeight = FontWeights.SemiBold
+                Style = itemStyle
             };
             _enableMenuItem.Click += (_, _) => ToggleTranslation();
 
             var settingsItem = new System.Windows.Controls.MenuItem
             {
                 Header = "设置",
-                Icon = CreateEmptyMenuIcon()
+                Icon = CreateEmptyMenuIcon(),
+                Style = itemStyle
             };
             settingsItem.Click += (_, _) => ShowSettings();
 
             var exitItem = new System.Windows.Controls.MenuItem
             {
                 Header = "退出",
-                Icon = CreateEmptyMenuIcon()
+                Icon = CreateEmptyMenuIcon(),
+                Style = itemStyle
             };
             exitItem.Click += (_, _) => ExitApplication();
 
@@ -263,8 +263,8 @@ namespace LiveCaptionsTranslator
         {
             return new Border
             {
-                Width = 20,
-                Height = 20,
+                Width = 16,
+                Height = 16,
                 Background = Media.Brushes.Transparent
             };
         }
