@@ -5,7 +5,6 @@ using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
 using LiveCaptionsTranslator.utils;
-using LiveCaptionsTranslator.Utils;
 using Button = Wpf.Ui.Controls.Button;
 
 namespace LiveCaptionsTranslator
@@ -27,7 +26,6 @@ namespace LiveCaptionsTranslator
                 IsAutoHeight = true;
                 CheckForFirstUse();
                 CheckForUpdates();
-                ChineseUiLocalizer.Apply(this);
             };
 
             double screenWidth = SystemParameters.PrimaryScreenWidth;
@@ -50,7 +48,6 @@ namespace LiveCaptionsTranslator
         public void ShowSettingsPage()
         {
             RootNavigation.Navigate(typeof(SettingPage));
-            Dispatcher.BeginInvoke(() => ChineseUiLocalizer.Apply(this));
         }
 
         public void SetOverlayEnabled(bool enabled)
@@ -102,7 +99,6 @@ namespace LiveCaptionsTranslator
                 WindowHandler.RestoreState(OverlayWindow, windowState);
 
             OverlayWindow.Show();
-            ChineseUiLocalizer.Apply(OverlayWindow);
         }
 
         private void CloseOverlay()
@@ -193,7 +189,6 @@ namespace LiveCaptionsTranslator
                     Owner = this
                 };
                 welcomeWindow.Show();
-                ChineseUiLocalizer.Apply(welcomeWindow);
             }, System.Windows.Threading.DispatcherPriority.Background);
         }
 
