@@ -22,11 +22,10 @@
             <Style x:Key="TrayPopupItemStyle" TargetType="{x:Type Button}">
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontFamily" Value="{x:Static SystemFonts.MessageFontFamily}" />
+                <Setter Property="FontSize" Value="{x:Static SystemFonts.MessageFontSize}" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="25" />
-                <Setter Property="MinWidth" Value="116" />
+                <Setter Property="MinWidth" Value="110" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -44,7 +43,7 @@
                                 CornerRadius="3"
                                 SnapsToDevicePixels="True">
                                 <ContentPresenter
-                                    Margin="0"
+                                    Margin="7,3,7,3"
                                     HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                     VerticalAlignment="Center"
                                     SnapsToDevicePixels="True" />
@@ -62,16 +61,15 @@
                 </Setter>
             </Style>
 
-            <!-- High-DPI tray menu. The text is rendered by an explicit TextBlock so its
-                 visual size is not dependent on ContextMenu/ContentPresenter inheritance. -->
+            <!-- FoxBin-like tray menu: use the Windows system message font instead of a hard-coded
+                 DIP size. The explicit TextBlock keeps the size deterministic while respecting DPI. -->
             <Style x:Key="TrayContextMenuItemStyle" TargetType="{x:Type MenuItem}">
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
-                <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontFamily" Value="{x:Static SystemFonts.MessageFontFamily}" />
+                <Setter Property="FontSize" Value="{x:Static SystemFonts.MessageFontSize}" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="25" />
-                <Setter Property="MinWidth" Value="116" />
+                <Setter Property="MinWidth" Value="110" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -90,10 +88,10 @@
                                 SnapsToDevicePixels="True">
                                 <TextBlock
                                     Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}"
-                                    Margin="7,0,7,0"
+                                    Margin="7,3,7,3"
                                     VerticalAlignment="Center"
-                                    FontFamily="Microsoft YaHei UI"
-                                    FontSize="12"
+                                    FontFamily="{TemplateBinding FontFamily}"
+                                    FontSize="{TemplateBinding FontSize}"
                                     FontWeight="Normal"
                                     Foreground="{TemplateBinding Foreground}"
                                     SnapsToDevicePixels="True"
