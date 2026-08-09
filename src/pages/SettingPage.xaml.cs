@@ -73,7 +73,7 @@ namespace LiveCaptionsTranslator
             flyout.Visibility = Visibility.Collapsed;
 
             UIElement contentElement = originalContent as UIElement
-                ?? new TextBlock { Text = originalContent?.ToString() ?? string.Empty };
+                ?? new System.Windows.Controls.TextBlock { Text = originalContent?.ToString() ?? string.Empty };
 
             var chrome = new Border
             {
