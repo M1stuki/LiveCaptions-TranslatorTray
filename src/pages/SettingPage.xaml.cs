@@ -1,7 +1,9 @@
 ﻿using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using Wpf.Ui.Appearance;
 
 using LiveCaptionsTranslator.models;
@@ -17,6 +19,7 @@ namespace LiveCaptionsTranslator
         public SettingPage()
         {
             InitializeComponent();
+            ConfigureStableInfoToolTips();
             ApplicationThemeManager.ApplySystemTheme();
             DataContext = Translator.Setting;
 
@@ -31,6 +34,83 @@ namespace LiveCaptionsTranslator
             TranslateAPIBox.SelectedIndex = 0;
 
             LoadAPISetting();
+        }
+
+        private void ConfigureStableInfoToolTips()
+        {
+            // These controls originally opened a WPF-UI Flyout on MouseEnter and closed it
+            // immediately on MouseLeave. With per-monitor DPI popups the newly opened popup can
+            // alter hit testing around the tiny 15-DIP trigger and cause an open/close loop.
+            // Detach those hover handlers and reuse the exact existing Flyout content inside the
+            // WPF ToolTip service, which owns hover timing and does not require manual Hide().
+            LiveCaptionsInfo.MouseEnter -= LiveCaptionsInfo_MouseEnter;
+            LiveCaptionsInfo.MouseLeave -= LiveCaptionsInfo_MouseLeave;
+            FrequencyInfo.MouseEnter -= FrequencyInfo_MouseEnter;
+            FrequencyInfo.MouseLeave -= FrequencyInfo_MouseLeave;
+            TranslateAPIInfo.MouseEnter -= TranslateAPIInfo_MouseEnter;
+            TranslateAPIInfo.MouseLeave -= TranslateAPIInfo_MouseLeave;
+            TargetLangInfo.MouseEnter -= TargetLangInfo_MouseEnter;
+            TargetLangInfo.MouseLeave -= TargetLangInfo_MouseLeave;
+            CaptionLogMaxInfo.MouseEnter -= CaptionLogMaxInfo_MouseEnter;
+            CaptionLogMaxInfo.MouseLeave -= CaptionLogMaxInfo_MouseLeave;
+            ContextAwareInfo.MouseEnter -= ContextAwareInfo_MouseEnter;
+            ContextAwareInfo.MouseLeave -= ContextAwareInfo_MouseLeave;
+
+            ConvertFlyoutToToolTip(LiveCaptionsInfo, LiveCaptionsInfoFlyout);
+            ConvertFlyoutToToolTip(FrequencyInfo, FrequencyInfoFlyout);
+            ConvertFlyoutToToolTip(TranslateAPIInfo, TranslateAPIInfoFlyout);
+            ConvertFlyoutToToolTip(TargetLangInfo, TargetLangInfoFlyout);
+            ConvertFlyoutToToolTip(CaptionLogMaxInfo, CaptionLogMaxInfoFlyout);
+            ConvertFlyoutToToolTip(ContextAwareInfo, ContextAwareInfoFlyout);
+        }
+
+        private static void ConvertFlyoutToToolTip(
+            System.Windows.Controls.Button trigger,
+            Wpf.Ui.Controls.Flyout flyout)
+        {
+            object? originalContent = flyout.Content;
+            flyout.Content = null;
+            flyout.Visibility = Visibility.Collapsed;
+
+            UIElement contentElement = originalContent as UIElement
+                ?? new TextBlock { Text = originalContent?.ToString() ?? string.Empty };
+
+            var chrome = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(45, 45, 45)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(68, 68, 68)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(10, 8, 10, 8),
+                Child = contentElement,
+                SnapsToDevicePixels = true
+            };
+
+            var toolTip = new System.Windows.Controls.ToolTip
+            {
+                Content = chrome,
+                Placement = PlacementMode.Top,
+                VerticalOffset = -4,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(0),
+                Foreground = new SolidColorBrush(Color.FromRgb(245, 245, 245)),
+                FontFamily = SystemFonts.MessageFontFamily,
+                FontSize = SystemFonts.MessageFontSize,
+                HasDropShadow = true,
+                StaysOpen = true,
+                IsHitTestVisible = false
+            };
+
+            TextOptions.SetTextFormattingMode(toolTip, TextFormattingMode.Ideal);
+            TextOptions.SetTextRenderingMode(toolTip, TextRenderingMode.Grayscale);
+            TextOptions.SetTextHintingMode(toolTip, TextHintingMode.Animated);
+
+            trigger.ToolTip = toolTip;
+            ToolTipService.SetInitialShowDelay(trigger, 120);
+            ToolTipService.SetBetweenShowDelay(trigger, 50);
+            ToolTipService.SetShowDuration(trigger, 30000);
         }
 
         private void LiveCaptionsButton_click(object sender, RoutedEventArgs e)
