@@ -23,10 +23,10 @@
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="7.5" />
+                <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="18" />
-                <Setter Property="MinWidth" Value="100" />
+                <Setter Property="Height" Value="25" />
+                <Setter Property="MinWidth" Value="116" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -68,10 +68,10 @@
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="7.5" />
+                <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="18" />
-                <Setter Property="MinWidth" Value="100" />
+                <Setter Property="Height" Value="25" />
+                <Setter Property="MinWidth" Value="116" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -90,10 +90,10 @@
                                 SnapsToDevicePixels="True">
                                 <TextBlock
                                     Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}"
-                                    Margin="6,0,6,0"
+                                    Margin="7,0,7,0"
                                     VerticalAlignment="Center"
                                     FontFamily="Microsoft YaHei UI"
-                                    FontSize="7.5"
+                                    FontSize="12"
                                     FontWeight="Normal"
                                     Foreground="{TemplateBinding Foreground}"
                                     SnapsToDevicePixels="True"
