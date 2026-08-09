@@ -23,10 +23,10 @@
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="9.25" />
+                <Setter Property="FontSize" Value="8.5" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="21" />
-                <Setter Property="MinWidth" Value="110" />
+                <Setter Property="Height" Value="19" />
+                <Setter Property="MinWidth" Value="104" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -62,15 +62,15 @@
                 </Setter>
             </Style>
 
-            <!-- Compact, pixel-aligned Fluent tray menu for high-DPI displays. -->
+            <!-- Extra-compact, pixel-aligned Fluent tray menu for high-DPI displays. -->
             <Style x:Key="TrayContextMenuItemStyle" TargetType="{x:Type MenuItem}">
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="9.25" />
+                <Setter Property="FontSize" Value="8.5" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="21" />
-                <Setter Property="MinWidth" Value="110" />
+                <Setter Property="Height" Value="19" />
+                <Setter Property="MinWidth" Value="104" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -88,7 +88,7 @@
                                 CornerRadius="4"
                                 SnapsToDevicePixels="True">
                                 <ContentPresenter
-                                    Margin="8,0,8,0"
+                                    Margin="7,0,7,0"
                                     VerticalAlignment="Center"
                                     ContentSource="Header"
                                     RecognizesAccessKey="True"
