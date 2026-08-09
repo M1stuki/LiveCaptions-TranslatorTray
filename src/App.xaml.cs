@@ -228,8 +228,8 @@ namespace LiveCaptionsTranslator
             var menu = new WpfContextMenu
             {
                 FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
-                FontSize = 7.5,
-                MinWidth = 100,
+                FontSize = 12,
+                MinWidth = 116,
                 StaysOpen = false,
                 UseLayoutRounding = true,
                 SnapsToDevicePixels = true
