@@ -100,9 +100,6 @@ namespace LiveCaptionsTranslator
             if (_trayMenuOwner != null || _mainWindow == null)
                 return;
 
-            // WPF-UI's own tray implementation uses a tiny hidden HWND as the shell/menu
-            // message owner, then foregrounds that HWND before opening the ContextMenu.
-            // Reproduce that behavior while keeping the existing reliable WinForms NotifyIcon.
             var parentHandle = new System.Windows.Interop.WindowInteropHelper(_mainWindow).EnsureHandle();
             _trayMenuOwner = new System.Windows.Interop.HwndSource(
                 0x0,
@@ -227,16 +224,14 @@ namespace LiveCaptionsTranslator
         {
             var menu = new WpfContextMenu
             {
-                FontFamily = new Media.FontFamily("Microsoft YaHei UI"),
-                FontSize = 12,
-                MinWidth = 116,
+                FontFamily = SystemFonts.MessageFontFamily,
+                FontSize = SystemFonts.MessageFontSize,
+                MinWidth = 110,
                 StaysOpen = false,
                 UseLayoutRounding = true,
                 SnapsToDevicePixels = true
             };
 
-            // The tray popup is a separate HWND. Explicit text metrics avoid fractional glyph
-            // placement on high-DPI displays instead of relying on inherited WPF defaults.
             Media.TextOptions.SetTextFormattingMode(menu, Media.TextFormattingMode.Display);
             Media.TextOptions.SetTextRenderingMode(menu, Media.TextRenderingMode.ClearType);
             Media.TextOptions.SetTextHintingMode(menu, Media.TextHintingMode.Fixed);
@@ -306,8 +301,6 @@ namespace LiveCaptionsTranslator
             if (_trayMenu.IsOpen)
                 _trayMenu.IsOpen = false;
 
-            // This mirrors WPF-UI.Tray's OpenMenu(): foreground the dedicated tray HWND,
-            // use MousePoint placement, and do not bind the popup to the hidden main window.
             _ = NativeMethods.SetForegroundWindow(_trayMenuOwner.Handle);
             System.Windows.Controls.ContextMenuService.SetPlacement(_trayMenu, PlacementMode.MousePoint);
             _trayMenu.PlacementTarget = null;
@@ -341,10 +334,6 @@ namespace LiveCaptionsTranslator
                     _mainWindow?.SetOverlayEnabled(false);
                     await Task.Run(Translator.StopEngine);
 
-                    // WPF/.NET deliberately keeps committed pages around for reuse. When the
-                    // app enters explicit tray-idle mode, collect dead UI/translation objects
-                    // and ask Windows to trim the process working set. This reduces the memory
-                    // shown by Task Manager without keeping recognition alive in the background.
                     if (_mainWindow == null || !_mainWindow.IsVisible)
                     {
                         await Task.Delay(120);
@@ -404,7 +393,6 @@ namespace LiveCaptionsTranslator
             }
             catch
             {
-                // Memory trimming is an idle optimization only; it must never affect toggling.
             }
         }
 
