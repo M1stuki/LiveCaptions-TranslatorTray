@@ -23,27 +23,31 @@
             <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                     <TextBlock Margin="2.5,0,0,5" Text="Windows 实时字幕" />
-                    <ui:Flyout x:Name="LiveCaptionsInfoFlyout">
-                        <TextBlock Width="300" TextWrapping="Wrap">
-                            <Run Text="Windows 11 24H2 之后，只能在实时字幕中修改" />
-                            <Run FontWeight="DemiBold" TextDecorations="Underline" Text="源语言" />
-                            <Run Text="。" />
-                            <Run FontWeight="Bold" Text="&#x0A;&#x0A;说明：" />
-                            <Run Text="请点击" />
-                            <Run FontWeight="Bold" Text="“隐藏”" />
-                            <Run Text="来隐藏实时字幕，不要直接关闭它。" />
-                        </TextBlock>
-                    </ui:Flyout>
                     <Button
                         x:Name="LiveCaptionsInfo"
-                        Width="15"
-                        Height="15"
-                        Margin="-5,-3,0,0"
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,5"
                         Padding="0"
+                        VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        MouseEnter="LiveCaptionsInfo_MouseEnter"
-                        MouseLeave="LiveCaptionsInfo_MouseLeave">
+                        ToolTipService.InitialShowDelay="120"
+                        ToolTipService.BetweenShowDelay="50"
+                        ToolTipService.ShowDuration="30000">
+                        <Button.ToolTip>
+                            <ToolTip Placement="Mouse" StaysOpen="True">
+                                <TextBlock MaxWidth="360" TextWrapping="Wrap">
+                                    <Run Text="Windows 11 24H2 之后，只能在实时字幕中修改" />
+                                    <Run FontWeight="DemiBold" TextDecorations="Underline" Text="源语言" />
+                                    <Run Text="。" />
+                                    <Run FontWeight="Bold" Text="&#x0A;&#x0A;说明：" />
+                                    <Run Text="请点击" />
+                                    <Run FontWeight="Bold" Text="“隐藏”" />
+                                    <Run Text="来隐藏实时字幕，不要直接关闭它。" />
+                                </TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                         <ui:SymbolIcon Symbol="Info16" />
                     </Button>
                 </StackPanel>
@@ -60,24 +64,28 @@
             <StackPanel Margin="15,10,0,0" Orientation="Vertical">
                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                     <TextBlock Margin="2.5,0,0,5" Text="API 调用间隔" />
-                    <ui:Flyout x:Name="FrequencyInfoFlyout">
-                        <TextBlock Width="300" TextWrapping="Wrap">
-                            <Run Text="控制翻译 API 的调用频率。数值越小，调用越频繁。" />
-                            <Run Text="&#x0A;字幕内容每变化" />
-                            <Run FontWeight="SemiBold" Text="[API 调用间隔]" />
-                            <Run Text="次后调用一次翻译 API。" />
-                        </TextBlock>
-                    </ui:Flyout>
                     <Button
                         x:Name="FrequencyInfo"
-                        Width="15"
-                        Height="15"
-                        Margin="-5,-3,0,0"
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,5"
                         Padding="0"
+                        VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        MouseEnter="FrequencyInfo_MouseEnter"
-                        MouseLeave="FrequencyInfo_MouseLeave">
+                        ToolTipService.InitialShowDelay="120"
+                        ToolTipService.BetweenShowDelay="50"
+                        ToolTipService.ShowDuration="30000">
+                        <Button.ToolTip>
+                            <ToolTip Placement="Mouse" StaysOpen="True">
+                                <TextBlock MaxWidth="360" TextWrapping="Wrap">
+                                    <Run Text="控制翻译 API 的调用频率。数值越小，调用越频繁。" />
+                                    <Run Text="&#x0A;字幕内容每变化" />
+                                    <Run FontWeight="SemiBold" Text="[API 调用间隔]" />
+                                    <Run Text="次后调用一次翻译 API。" />
+                                </TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                         <ui:SymbolIcon Symbol="Info16" />
                     </Button>
                 </StackPanel>
@@ -97,22 +105,26 @@
             <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                     <TextBlock Margin="2.5,0,0,5" Text="翻译 API" />
-                    <ui:Flyout x:Name="TranslateAPIInfoFlyout">
-                        <TextBlock
-                            Width="300"
-                            Text="除 Google 和 Google2 外，其他 API 使用前都需要先配置。"
-                            TextWrapping="Wrap" />
-                    </ui:Flyout>
                     <Button
                         x:Name="TranslateAPIInfo"
-                        Width="15"
-                        Height="15"
-                        Margin="-5,-3,0,0"
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,5"
                         Padding="0"
+                        VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        MouseEnter="TranslateAPIInfo_MouseEnter"
-                        MouseLeave="TranslateAPIInfo_MouseLeave">
+                        ToolTipService.InitialShowDelay="120"
+                        ToolTipService.BetweenShowDelay="50"
+                        ToolTipService.ShowDuration="30000">
+                        <Button.ToolTip>
+                            <ToolTip Placement="Mouse" StaysOpen="True">
+                                <TextBlock
+                                    MaxWidth="360"
+                                    Text="除 Google 和 Google2 外，其他 API 使用前都需要先配置。"
+                                    TextWrapping="Wrap" />
+                            </ToolTip>
+                        </Button.ToolTip>
                         <ui:SymbolIcon Symbol="Info16" />
                     </Button>
                 </StackPanel>
@@ -132,26 +144,30 @@
                         Margin="2.5,0,0,5"
                         VerticalAlignment="Center"
                         Text="目标语言" />
-                    <ui:Flyout x:Name="TargetLangInfoFlyout">
-                        <TextBlock Width="350" TextWrapping="Wrap">
-                            <Run FontWeight="DemiBold" TextDecorations="Underline" Text="“没有我想要的目标语言？”" />
-                            <Run Text="&#x0A;可以直接编辑此下拉框内容来自定义语言，建议遵循" />
-                            <Run FontWeight="Bold" Text="BCP 47 语言标签。" />
-                            <Run FontWeight="Bold" Text="&#x0A;&#x0A;说明：" />
-                            <Run Text="部分 API（例如 DeepL）使用不同的目标语言代码，详情请查看其官方文档。" />
-                            <Run Text="&#x0A;列表中已有的语言已内置代码映射，无需处理；只有自定义列表外语言时才需要注意。" />
-                        </TextBlock>
-                    </ui:Flyout>
                     <Button
                         x:Name="TargetLangInfo"
-                        Width="15"
-                        Height="15"
-                        Margin="-5,-3,0,0"
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,5"
                         Padding="0"
+                        VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        MouseEnter="TargetLangInfo_MouseEnter"
-                        MouseLeave="TargetLangInfo_MouseLeave">
+                        ToolTipService.InitialShowDelay="120"
+                        ToolTipService.BetweenShowDelay="50"
+                        ToolTipService.ShowDuration="30000">
+                        <Button.ToolTip>
+                            <ToolTip Placement="Mouse" StaysOpen="True">
+                                <TextBlock MaxWidth="380" TextWrapping="Wrap">
+                                    <Run FontWeight="DemiBold" TextDecorations="Underline" Text="“没有我想要的目标语言？”" />
+                                    <Run Text="&#x0A;可以直接编辑此下拉框内容来自定义语言，建议遵循" />
+                                    <Run FontWeight="Bold" Text="BCP 47 语言标签。" />
+                                    <Run FontWeight="Bold" Text="&#x0A;&#x0A;说明：" />
+                                    <Run Text="部分 API（例如 DeepL）使用不同的目标语言代码，详情请查看其官方文档。" />
+                                    <Run Text="&#x0A;列表中已有的语言已内置代码映射，无需处理；只有自定义列表外语言时才需要注意。" />
+                                </TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                         <ui:SymbolIcon Symbol="Info16" />
                     </Button>
                 </StackPanel>
@@ -197,28 +213,32 @@
             <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                     <TextBlock Margin="2.5,0,0,5" Text="上下文句数" />
-                    <ui:Flyout x:Name="CaptionLogMaxInfoFlyout">
-                        <TextBlock Width="300" TextWrapping="Wrap">
-                            <Run FontWeight="Bold" Text="上下文句数：" />
-                            <Run Text="启用“上下文翻译”时，决定提供给模型的前文句数。" />
-                            <Run FontWeight="Bold" Text="&#x0A;悬浮字幕句数：" />
-                            <Run Text="决定字幕历史卡片显示的句数，并限制悬浮字幕窗口最多显示的句数。" />
-                            <Run FontWeight="Bold" Text="&#x0A;&#x0A;说明：" />
-                            <Run Text="上下文句数必须" />
-                            <Run FontWeight="Bold" Text="大于或等于" />
-                            <Run Text="悬浮字幕句数；如果不满足，程序会自动调整。" />
-                        </TextBlock>
-                    </ui:Flyout>
                     <Button
                         x:Name="CaptionLogMaxInfo"
-                        Width="15"
-                        Height="15"
-                        Margin="-5,-3,0,0"
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,5"
                         Padding="0"
+                        VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        MouseEnter="CaptionLogMaxInfo_MouseEnter"
-                        MouseLeave="CaptionLogMaxInfo_MouseLeave">
+                        ToolTipService.InitialShowDelay="120"
+                        ToolTipService.BetweenShowDelay="50"
+                        ToolTipService.ShowDuration="30000">
+                        <Button.ToolTip>
+                            <ToolTip Placement="Mouse" StaysOpen="True">
+                                <TextBlock MaxWidth="380" TextWrapping="Wrap">
+                                    <Run FontWeight="Bold" Text="上下文句数：" />
+                                    <Run Text="启用“上下文翻译”时，决定提供给模型的前文句数。" />
+                                    <Run FontWeight="Bold" Text="&#x0A;悬浮字幕句数：" />
+                                    <Run Text="决定字幕历史卡片显示的句数，并限制悬浮字幕窗口最多显示的句数。" />
+                                    <Run FontWeight="Bold" Text="&#x0A;&#x0A;说明：" />
+                                    <Run Text="上下文句数必须" />
+                                    <Run FontWeight="Bold" Text="大于或等于" />
+                                    <Run Text="悬浮字幕句数；如果不满足，程序会自动调整。" />
+                                </TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                         <ui:SymbolIcon Symbol="Info16" />
                     </Button>
                 </StackPanel>
@@ -270,22 +290,26 @@
                         OnContent="开" />
                     <Button
                         x:Name="ContextAwareInfo"
-                        Width="15"
-                        Height="15"
-                        Margin="-5,-3,0,0"
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,0,0"
                         Padding="0"
+                        VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
-                        MouseEnter="ContextAwareInfo_MouseEnter"
-                        MouseLeave="ContextAwareInfo_MouseLeave">
+                        ToolTipService.InitialShowDelay="120"
+                        ToolTipService.BetweenShowDelay="50"
+                        ToolTipService.ShowDuration="30000">
+                        <Button.ToolTip>
+                            <ToolTip Placement="Mouse" StaysOpen="True">
+                                <TextBlock MaxWidth="360" TextWrapping="Wrap">
+                                    <Run Text="结合前文进行翻译。" />
+                                    <Run Text="&#x0A;可以提高翻译准确性，但会消耗更多 Token。" />
+                                </TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
                         <ui:SymbolIcon Symbol="Info16" />
                     </Button>
-                    <ui:Flyout x:Name="ContextAwareInfoFlyout">
-                        <TextBlock Width="300" TextWrapping="Wrap">
-                            <Run Text="结合前文进行翻译。" />
-                            <Run Text="&#x0A;可以提高翻译准确性，但会消耗更多 Token。" />
-                        </TextBlock>
-                    </ui:Flyout>
                 </StackPanel>
             </StackPanel>
         </StackPanel>
