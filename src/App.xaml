@@ -23,10 +23,10 @@
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="8.5" />
+                <Setter Property="FontSize" Value="7.5" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="19" />
-                <Setter Property="MinWidth" Value="104" />
+                <Setter Property="Height" Value="18" />
+                <Setter Property="MinWidth" Value="100" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -62,15 +62,16 @@
                 </Setter>
             </Style>
 
-            <!-- Extra-compact, pixel-aligned Fluent tray menu for high-DPI displays. -->
+            <!-- High-DPI tray menu. The text is rendered by an explicit TextBlock so its
+                 visual size is not dependent on ContextMenu/ContentPresenter inheritance. -->
             <Style x:Key="TrayContextMenuItemStyle" TargetType="{x:Type MenuItem}">
                 <Setter Property="Foreground" Value="#F5F5F5" />
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-                <Setter Property="FontSize" Value="8.5" />
+                <Setter Property="FontSize" Value="7.5" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Height" Value="19" />
-                <Setter Property="MinWidth" Value="104" />
+                <Setter Property="Height" Value="18" />
+                <Setter Property="MinWidth" Value="100" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="UseLayoutRounding" Value="True" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -87,13 +88,18 @@
                                 Background="{TemplateBinding Background}"
                                 CornerRadius="4"
                                 SnapsToDevicePixels="True">
-                                <ContentPresenter
-                                    Margin="7,0,7,0"
+                                <TextBlock
+                                    Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}"
+                                    Margin="6,0,6,0"
                                     VerticalAlignment="Center"
-                                    ContentSource="Header"
-                                    RecognizesAccessKey="True"
+                                    FontFamily="Microsoft YaHei UI"
+                                    FontSize="7.5"
+                                    FontWeight="Normal"
+                                    Foreground="{TemplateBinding Foreground}"
                                     SnapsToDevicePixels="True"
-                                    TextElement.Foreground="{TemplateBinding Foreground}" />
+                                    TextOptions.TextFormattingMode="Display"
+                                    TextOptions.TextRenderingMode="ClearType"
+                                    TextOptions.TextHintingMode="Fixed" />
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsHighlighted" Value="True">
